@@ -18,7 +18,8 @@ root.render(
 // Register the service worker for PWA functionality
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+    const swUrl = `${window.location.origin}/sw.js`;
+    navigator.serviceWorker.register(swUrl)
       .then(registration => {
         console.log('Service Worker registered with scope:', registration.scope);
       })

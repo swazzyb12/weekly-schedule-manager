@@ -5,6 +5,7 @@ import DayTabs from './DayTabs';
 import ScheduleCard from './ScheduleCard';
 import EditForm from './EditForm';
 import { Plus } from './icons';
+import { useLocalization } from '../App';
 
 interface DayViewProps {
   schedule: Schedule;
@@ -42,6 +43,8 @@ const DayView: React.FC<DayViewProps> = (props) => {
     onExportToCSV,
     onExportToICS,
   } = props;
+  
+  const { t } = useLocalization();
 
   const NEW_ITEM_TEMPLATE: ScheduleItem = {
       id: 'new-item-placeholder',
@@ -93,9 +96,9 @@ const DayView: React.FC<DayViewProps> = (props) => {
         
         {schedule[selectedDay].length === 0 && !isAdding && (
           <div className="text-center py-10 px-4 bg-white rounded-xl shadow-lg">
-            <p className="text-gray-500">No activities scheduled for today.</p>
+            <p className="text-gray-500">{t('noActivities')}</p>
             <button onClick={onAddNewItem} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold">
-              Add an activity
+              {t('addActivity')}
             </button>
           </div>
         )}
@@ -104,7 +107,7 @@ const DayView: React.FC<DayViewProps> = (props) => {
       <button
         onClick={onAddNewItem}
         className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-all duration-300 transform hover:scale-110"
-        aria-label="Add new item"
+        aria-label={t('addNewItem')}
       >
         <Plus className="w-7 h-7" />
       </button>

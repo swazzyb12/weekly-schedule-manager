@@ -2,6 +2,7 @@
 import React from 'react';
 import type { Day } from '../types';
 import { DAYS } from '../constants';
+import { useLocalization } from '../App';
 
 interface DayTabsProps {
   selectedDay: Day;
@@ -9,6 +10,7 @@ interface DayTabsProps {
 }
 
 const DayTabs: React.FC<DayTabsProps> = ({ selectedDay, onSetSelectedDay }) => {
+  const { t } = useLocalization();
   return (
     <div className="bg-white sticky top-[88px] z-10 shadow-sm">
       <div className="max-w-4xl mx-auto px-4">
@@ -23,7 +25,7 @@ const DayTabs: React.FC<DayTabsProps> = ({ selectedDay, onSetSelectedDay }) => {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              {day.charAt(0).toUpperCase() + day.slice(1)}
+              {t(`days.${day}`)}
             </button>
           ))}
         </div>

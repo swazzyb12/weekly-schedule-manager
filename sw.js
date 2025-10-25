@@ -2,7 +2,6 @@ const CACHE_NAME = 'weekly-schedule-cache-v1';
 const URLS_TO_CACHE = [
   '/',
   '/index.html',
-  '/index.tsx',
   'https://cdn.tailwindcss.com'
   // Add other static assets here if needed, like icons or specific JS modules
 ];

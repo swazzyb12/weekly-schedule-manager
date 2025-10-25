@@ -3,6 +3,7 @@ import React from 'react';
 import type { ScheduleItem } from '../types';
 import { CATEGORY_STYLES, CATEGORY_ICONS } from '../constants';
 import { Clock, Edit2, Trash2, Repeat } from './icons';
+import { useLocalization } from '../App';
 
 interface ScheduleCardProps {
   item: ScheduleItem;
@@ -12,6 +13,7 @@ interface ScheduleCardProps {
 
 const ScheduleCard: React.FC<ScheduleCardProps> = ({ item, onEdit, onDelete }) => {
   const style = CATEGORY_STYLES[item.category] || CATEGORY_STYLES.personal;
+  const { t, locale } = useLocalization();
 
   return (
     <div className={`p-4 border-l-4 ${style.border} bg-white`}>
@@ -32,8 +34,8 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({ item, onEdit, onDelete }) =
                   <span className="hidden sm:inline">•</span>
                   <div className="flex items-center gap-1.5 capitalize">
                     <Repeat className="w-4 h-4 text-gray-500" />
-                    <span>{item.recurrence}</span>
-                    {item.recurrenceEndDate && <span>until {new Date(item.recurrenceEndDate + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>}
+                    <span>{t(item.recurrence)}</span>
+                    {item.recurrenceEndDate && <span>{t('repeatUntil')} {new Date(item.recurrenceEndDate + 'T00:00:00').toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' })}</span>}
                   </div>
                 </>
               )}
@@ -47,14 +49,14 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({ item, onEdit, onDelete }) =
           <button
             onClick={() => onEdit(item.id)}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-            aria-label="Edit item"
+            aria-label={t('edit')}
           >
             <Edit2 className="w-5 h-5" />
           </button>
           <button
             onClick={() => onDelete(item.id)}
             className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
-            aria-label="Delete item"
+            aria-label={t('delete')}
           >
             <Trash2 className="w-5 h-5" />
           </button>

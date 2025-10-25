@@ -1,36 +1,174 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import type { Schedule, Day, ScheduleItem } from './types';
-import { INITIAL_SCHEDULE, DAYS } from './constants';
+import { getInitialSchedule, DAYS } from './constants';
 import DayView from './components/DayView';
 import WeekView from './components/WeekView';
 import Modal from './components/Modal';
 import { parseTimeRange, doesOverlap } from './utils/time';
 
-const App: React.FC = () => {
-  const [schedule, setSchedule] = useState<Schedule>(INITIAL_SCHEDULE);
+// --- Localization System ---
+// To avoid creating new files as per the project constraints, the localization
+// logic (translations, context, and hook) is included in this main App component file.
+
+const translations: Record<string, Record<string, string>> = {
+  en: {
+    appName: "My Schedule",
+    weekOverview: "Week Overview",
+    exportToICal: "Export to iCal (.ics)",
+    exportToCSV: "Export to CSV",
+    resetToDefault: "Reset to Default",
+    dayView: "Day View",
+    home: "Day View",
+    ical: "iCal",
+    csv: "CSV",
+    addNewItem: "Add new item",
+    noActivities: "No activities scheduled for today.",
+    addActivity: "Add an activity",
+    save: "Save",
+    cancel: "Cancel",
+    edit: "Edit",
+    delete: "Delete",
+    activity: "Activity",
+    timePlaceholder: "Time (e.g., 9:00-10:00)",
+    durationPlaceholder: "Duration (e.g., 1h)",
+    notes: "Notes",
+    doesNotRepeat: "Does not repeat",
+    daily: "Daily",
+    weekly: "Weekly",
+    monthly: "Monthly",
+    repeatUntil: "until",
+    schedulingConflictTitle: "Scheduling Conflict",
+    schedulingConflictMessage: "The time slot {time} overlaps with an existing activity: \"{activity}\" ({conflictTime}). Please choose a different time.",
+    confirmDeletionTitle: "Confirm Deletion",
+    confirmDeletionMessage: "Are you sure you want to delete \"{activity}\"? This action cannot be undone.",
+    resetConfirm: "Are you sure you want to reset to the default schedule? This cannot be undone.",
+    ok: "OK",
+    "days.monday": "Monday",
+    "days.tuesday": "Tuesday",
+    "days.wednesday": "Wednesday",
+    "days.thursday": "Thursday",
+    "days.friday": "Friday",
+    "days.saturday": "Saturday",
+    "days.sunday": "Sunday",
+    "categories.anchor": "Anchor",
+    "categories.school": "School",
+    "categories.gym": "Gym",
+    "categories.deepwork": "Deep Work",
+    "categories.maintenance": "Maintenance",
+    "categories.recovery": "Recovery",
+    "categories.transition": "Transition",
+    "categories.personal": "Personal",
+    "categories.social": "Social",
+    "categories.church": "Church",
+    "categories.planning": "Planning"
+  },
+  nl: {
+    appName: "Mijn Schema",
+    weekOverview: "Weekoverzicht",
+    exportToICal: "Exporteer naar iCal (.ics)",
+    exportToCSV: "Exporteer naar CSV",
+    resetToDefault: "Reset naar standaard",
+    dayView: "Dagweergave",
+    home: "Dagweergave",
+    ical: "iCal",
+    csv: "CSV",
+    addNewItem: "Nieuw item toevoegen",
+    noActivities: "Geen activiteiten gepland voor vandaag.",
+    addActivity: "Voeg een activiteit toe",
+    save: "Opslaan",
+    cancel: "Annuleren",
+    edit: "Bewerken",
+    delete: "Verwijderen",
+    activity: "Activiteit",
+    timePlaceholder: "Tijd (bijv. 9:00-10:00)",
+    durationPlaceholder: "Duur (bijv. 1u)",
+    notes: "Notities",
+    doesNotRepeat: "Herhaalt niet",
+    daily: "Dagelijks",
+    weekly: "Wekelijks",
+    monthly: "Maandelijks",
+    repeatUntil: "tot",
+    schedulingConflictTitle: "Planningsconflict",
+    schedulingConflictMessage: "Het tijdslot {time} overlapt met een bestaande activiteit: \"{activity}\" ({conflictTime}). Kies een andere tijd.",
+    confirmDeletionTitle: "Verwijdering bevestigen",
+    confirmDeletionMessage: "Weet je zeker dat je \"{activity}\" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+    resetConfirm: "Weet je zeker dat je wilt resetten naar het standaardschema? Dit kan niet ongedaan worden gemaakt.",
+    ok: "OK",
+    "days.monday": "Maandag",
+    "days.tuesday": "Dinsdag",
+    "days.wednesday": "Woensdag",
+    "days.thursday": "Donderdag",
+    "days.friday": "Vrijdag",
+    "days.saturday": "Zaterdag",
+    "days.sunday": "Zondag",
+    "categories.anchor": "Anker",
+    "categories.school": "School",
+    "categories.gym": "Sportschool",
+    "categories.deepwork": "Diep Werk",
+    "categories.maintenance": "Onderhoud",
+    "categories.recovery": "Herstel",
+    "categories.transition": "Overgang",
+    "categories.personal": "Persoonlijk",
+    "categories.social": "Sociaal",
+    "categories.church": "Kerk",
+    "categories.planning": "Planning"
+  }
+};
+
+type Language = 'en' | 'nl';
+interface LocalizationContextType {
+  language: Language;
+  setLanguage: (language: Language) => void;
+  t: (key: string, vars?: Record<string, string | number>) => string;
+  locale: string;
+}
+
+const LocalizationContext = createContext<LocalizationContextType | null>(null);
+
+export const useLocalization = () => {
+  const context = useContext(LocalizationContext);
+  if (!context) {
+    throw new Error('useLocalization must be used within a LocalizationProvider');
+  }
+  return context;
+};
+
+// --- App Component ---
+
+const AppContent: React.FC = () => {
+  const { t, language, locale } = useLocalization();
+  
+  const [schedule, setSchedule] = useState<Schedule>(() => {
+    try {
+      const savedSchedule = localStorage.getItem('weekly-schedule');
+      if (savedSchedule) return JSON.parse(savedSchedule);
+    } catch (error) {
+      console.error('Failed to parse schedule from localStorage.', error);
+    }
+    return getInitialSchedule(language);
+  });
+
   const [selectedDay, setSelectedDay] = useState<Day>('monday');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [view, setView] = useState<'day' | 'week'>('day');
   const [errorModal, setErrorModal] = useState({ isOpen: false, title: '', message: '' });
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm?: () => void;
+  }>({ isOpen: false, title: '', message: '' });
 
   useEffect(() => {
-    const loadSchedule = () => {
-      try {
-        const savedSchedule = localStorage.getItem('weekly-schedule');
-        if (savedSchedule) {
-          setSchedule(JSON.parse(savedSchedule));
-        } else {
-          setSchedule(INITIAL_SCHEDULE);
-        }
-      } catch (error) {
-        console.error('Failed to load schedule from localStorage, using default.', error);
-        setSchedule(INITIAL_SCHEDULE);
-      }
-    };
-    loadSchedule();
-  }, []);
-  
+    // Save schedule to local storage whenever it changes
+    try {
+      localStorage.setItem('weekly-schedule', JSON.stringify(schedule));
+    } catch (error) {
+      console.error('Failed to save schedule to localStorage:', error);
+    }
+  }, [schedule]);
+
   const handleSetEditingId = (id: string | null) => {
     setEditingId(id);
     if (id !== null) {
@@ -43,11 +181,8 @@ const App: React.FC = () => {
     
     const newRange = parseTimeRange(updatedItem.time);
     if (newRange) {
-      // Check for conflicts with other items on the same day
       const conflict = schedule[selectedDay].find(item => {
-        // Exclude the item being edited from the check
         if (item.id === editingId) return false;
-        
         const existingRange = parseTimeRange(item.time);
         return existingRange ? doesOverlap(newRange, existingRange) : false;
       });
@@ -55,42 +190,42 @@ const App: React.FC = () => {
       if (conflict) {
         setErrorModal({
           isOpen: true,
-          title: 'Scheduling Conflict',
-          message: `The time slot ${updatedItem.time} overlaps with an existing activity: "${conflict.activity}" (${conflict.time}). Please choose a different time.`,
+          title: t('schedulingConflictTitle'),
+          message: t('schedulingConflictMessage', {
+            time: updatedItem.time,
+            activity: conflict.activity,
+            conflictTime: conflict.time
+          }),
         });
-        return; // Abort save
+        return;
       }
     }
 
-    setSchedule(prevSchedule => {
-      const newDaySchedule = prevSchedule[selectedDay].map((item) =>
-        item.id === editingId ? updatedItem : item
-      );
-      const newSchedule = { ...prevSchedule, [selectedDay]: newDaySchedule };
-      try {
-        localStorage.setItem('weekly-schedule', JSON.stringify(newSchedule));
-      } catch (error) {
-        console.error('Failed to save schedule:', error);
-      }
-      return newSchedule;
-    });
-
+    setSchedule(prevSchedule => ({
+      ...prevSchedule,
+      [selectedDay]: prevSchedule[selectedDay].map(item => item.id === editingId ? updatedItem : item)
+    }));
     setEditingId(null);
   };
 
   const handleDeleteItem = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this activity?')) {
-      setSchedule(prevSchedule => {
-        const newDaySchedule = prevSchedule[selectedDay].filter((item) => item.id !== id);
-        const newSchedule = { ...prevSchedule, [selectedDay]: newDaySchedule };
-        try {
-          localStorage.setItem('weekly-schedule', JSON.stringify(newSchedule));
-        } catch (error) {
-          console.error('Failed to save schedule:', error);
-        }
-        return newSchedule;
-      });
-    }
+    const itemToDelete = schedule[selectedDay].find(item => item.id === id);
+    if (!itemToDelete) return;
+  
+    const confirmAction = () => {
+      setSchedule(prevSchedule => ({
+        ...prevSchedule,
+        [selectedDay]: prevSchedule[selectedDay].filter(item => item.id !== id)
+      }));
+      closeConfirmModal();
+    };
+  
+    setConfirmModal({
+      isOpen: true,
+      title: t('confirmDeletionTitle'),
+      message: t('confirmDeletionMessage', { activity: itemToDelete.activity }),
+      onConfirm: confirmAction
+    });
   };
   
   const handleAddNewItem = () => {
@@ -101,7 +236,6 @@ const App: React.FC = () => {
   const handleSaveNewItem = (newItem: ScheduleItem) => {
     const newRange = parseTimeRange(newItem.time);
     if (newRange) {
-      // Check for conflicts with all existing items on the same day
       const conflict = schedule[selectedDay].find(item => {
         const existingRange = parseTimeRange(item.time);
         return existingRange ? doesOverlap(newRange, existingRange) : false;
@@ -110,24 +244,21 @@ const App: React.FC = () => {
       if (conflict) {
         setErrorModal({
           isOpen: true,
-          title: 'Scheduling Conflict',
-          message: `The time slot ${newItem.time} overlaps with an existing activity: "${conflict.activity}" (${conflict.time}). Please choose a different time.`,
+          title: t('schedulingConflictTitle'),
+          message: t('schedulingConflictMessage', {
+            time: newItem.time,
+            activity: conflict.activity,
+            conflictTime: conflict.time
+          }),
         });
-        return; // Abort save
+        return;
       }
     }
 
-    setSchedule(prevSchedule => {
-      const itemWithId = { ...newItem, id: new Date().toISOString() };
-      const newDaySchedule = [...prevSchedule[selectedDay], itemWithId];
-      const newSchedule = { ...prevSchedule, [selectedDay]: newDaySchedule };
-      try {
-        localStorage.setItem('weekly-schedule', JSON.stringify(newSchedule));
-      } catch (error) {
-        console.error('Failed to save schedule:', error);
-      }
-      return newSchedule;
-    });
+    setSchedule(prevSchedule => ({
+      ...prevSchedule,
+      [selectedDay]: [...prevSchedule[selectedDay], { ...newItem, id: new Date().toISOString() }]
+    }));
     setIsAdding(false);
   };
   
@@ -136,13 +267,9 @@ const App: React.FC = () => {
   };
 
   const handleResetToDefault = () => {
-    if (window.confirm('Are you sure you want to reset to the default schedule? This cannot be undone.')) {
-      try {
-        localStorage.setItem('weekly-schedule', JSON.stringify(INITIAL_SCHEDULE));
-        setSchedule(INITIAL_SCHEDULE);
-      } catch (error) {
-        console.error('Failed to save schedule:', error);
-      }
+    if (window.confirm(t('resetConfirm'))) {
+      const defaultSchedule = getInitialSchedule(language);
+      setSchedule(defaultSchedule);
     }
   };
 
@@ -155,7 +282,7 @@ const App: React.FC = () => {
     DAYS.forEach(day => {
       schedule[day].forEach(item => {
         const row = [
-          day.charAt(0).toUpperCase() + day.slice(1),
+          t(`days.${day}`),
           item.time,
           item.duration,
           item.category,
@@ -187,15 +314,14 @@ const App: React.FC = () => {
 
     const toICSUntilDate = (dateString: string) => {
         const [year, month, day] = dateString.split('-').map(Number);
-        // Create date in UTC to avoid timezone shifts, set to end of day
         const date = new Date(Date.UTC(year, month - 1, day, 23, 59, 59));
         return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     };
 
     const getWeekStartDate = () => {
         const today = new Date();
-        const dayOfWeek = today.getDay(); // Sunday - 0, Monday - 1, ...
-        const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust for Sunday
+        const dayOfWeek = today.getDay();
+        const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
         const monday = new Date(today.setDate(diff));
         monday.setHours(0, 0, 0, 0);
         return monday;
@@ -204,8 +330,6 @@ const App: React.FC = () => {
     const parseTimeAndDuration = (item: ScheduleItem, eventDate: Date): [Date, Date] | null => {
         const startDate = new Date(eventDate);
         const endDate = new Date(eventDate);
-
-        // First, try to parse HH:MM-HH:MM format
         const range = parseTimeRange(item.time);
         if (range) {
             startDate.setHours(Math.floor(range[0] / 60), range[0] % 60, 0, 0);
@@ -213,15 +337,14 @@ const App: React.FC = () => {
             return [startDate, endDate];
         }
 
-        // Fallback for vague times like "Morning"
         let startHours = 9, startMinutes = 0;
         if (item.time.toLowerCase() === 'morning') { startHours = 9; }
         else if (item.time.toLowerCase() === 'midday') { startHours = 12; }
         else if (item.time.toLowerCase() === 'afternoon') { startHours = 14; }
-        else { return null; } // Skip items with flexible/unparsable time
+        else { return null; }
 
         const durationMatch = item.duration.match(/(?:(\d+)h)?(?:(\d+)m)?/);
-        let durationInMinutes = 60; // Default to 1 hr if not specified
+        let durationInMinutes = 60;
         if (durationMatch) {
             const hours = parseInt(durationMatch[1] || '0', 10);
             const minutes = parseInt(durationMatch[2] || '0', 10);
@@ -236,9 +359,7 @@ const App: React.FC = () => {
     };
 
     let icsString = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//MyScheduleApp//EN',
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//MyScheduleApp//EN',
     ].join('\r\n');
     
     const weekStartDate = getWeekStartDate();
@@ -247,22 +368,14 @@ const App: React.FC = () => {
       schedule[day].forEach(item => {
         const eventDate = new Date(weekStartDate);
         eventDate.setDate(weekStartDate.getDate() + dayIndex);
-
         const dates = parseTimeAndDuration(item, eventDate);
-        if (!dates) return; // Skip if time cannot be parsed
-
+        if (!dates) return;
         const [startDate, endDate] = dates;
-
         const eventParts = [
-          'BEGIN:VEVENT',
-          `DTSTAMP:${toICSDate(new Date())}`,
-          `UID:${item.id}@myschedule.app`,
-          `DTSTART:${toICSDate(startDate)}`,
-          `DTEND:${toICSDate(endDate)}`,
-          `SUMMARY:${item.activity}`,
+          'BEGIN:VEVENT', `DTSTAMP:${toICSDate(new Date())}`, `UID:${item.id}@myschedule.app`,
+          `DTSTART:${toICSDate(startDate)}`, `DTEND:${toICSDate(endDate)}`, `SUMMARY:${item.activity}`,
           `DESCRIPTION:${item.notes.replace(/\n/g, '\\n')}`,
         ];
-
         if (item.recurrence && item.recurrence !== 'none') {
             let rrule = `RRULE:FREQ=${item.recurrence.toUpperCase()}`;
             if (item.recurrenceEndDate) {
@@ -270,14 +383,10 @@ const App: React.FC = () => {
             }
             eventParts.push(rrule);
         }
-        
         eventParts.push('END:VEVENT');
-        
-        const event = eventParts.join('\r\n');
-        icsString += '\r\n' + event;
+        icsString += '\r\n' + eventParts.join('\r\n');
       });
     });
-
     icsString += '\r\nEND:VCALENDAR';
 
     const blob = new Blob([icsString], { type: 'text/calendar;charset=utf-8;' });
@@ -292,9 +401,8 @@ const App: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  const closeErrorModal = () => {
-    setErrorModal({ isOpen: false, title: '', message: '' });
-  };
+  const closeErrorModal = () => setErrorModal({ isOpen: false, title: '', message: '' });
+  const closeConfirmModal = () => setConfirmModal({ isOpen: false, title: '', message: '' });
 
   return (
     <>
@@ -330,7 +438,46 @@ const App: React.FC = () => {
         title={errorModal.title}
         message={errorModal.message}
       />
+      <Modal
+        isOpen={confirmModal.isOpen}
+        onClose={closeConfirmModal}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={t('delete')}
+      />
     </>
+  );
+};
+
+const App: React.FC = () => {
+  const [language, setLanguage] = useState<Language>(() => {
+    const browserLang = navigator.language.split(/[-_]/)[0];
+    return browserLang === 'nl' ? 'nl' : 'en';
+  });
+
+  const t = useCallback((key: string, vars?: Record<string, string | number>) => {
+    let translation = translations[language][key] || translations['en'][key] || key;
+    if (vars) {
+      Object.keys(vars).forEach(varKey => {
+        const regex = new RegExp(`{${varKey}}`, 'g');
+        translation = translation.replace(regex, String(vars[varKey]));
+      });
+    }
+    return translation;
+  }, [language]);
+
+  const localizationContextValue: LocalizationContextType = {
+    language,
+    setLanguage,
+    t,
+    locale: language === 'nl' ? 'nl-NL' : 'en-US'
+  };
+  
+  return (
+    <LocalizationContext.Provider value={localizationContextValue}>
+      <AppContent />
+    </LocalizationContext.Provider>
   );
 };
 

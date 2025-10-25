@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import type { ScheduleItem, Category } from '../types';
 import { CATEGORY_STYLES } from '../constants';
 import { Save, X } from './icons';
+import { useLocalization } from '../App';
 
 interface EditFormProps {
   item: ScheduleItem;
@@ -12,6 +13,7 @@ interface EditFormProps {
 
 const EditForm: React.FC<EditFormProps> = ({ item, onSave, onCancel }) => {
   const [editForm, setEditForm] = useState<ScheduleItem>(item);
+  const { t } = useLocalization();
 
   useEffect(() => {
     setEditForm(item);
@@ -41,7 +43,7 @@ const EditForm: React.FC<EditFormProps> = ({ item, onSave, onCancel }) => {
         value={editForm.activity}
         onChange={handleInputChange}
         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        placeholder="Activity"
+        placeholder={t('activity')}
         required
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -51,7 +53,7 @@ const EditForm: React.FC<EditFormProps> = ({ item, onSave, onCancel }) => {
           value={editForm.time}
           onChange={handleInputChange}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Time (e.g., 9:00-10:00)"
+          placeholder={t('timePlaceholder')}
         />
         <input
           type="text"
@@ -59,7 +61,7 @@ const EditForm: React.FC<EditFormProps> = ({ item, onSave, onCancel }) => {
           value={editForm.duration}
           onChange={handleInputChange}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Duration (e.g., 1h)"
+          placeholder={t('durationPlaceholder')}
         />
       </div>
        <select
@@ -69,7 +71,7 @@ const EditForm: React.FC<EditFormProps> = ({ item, onSave, onCancel }) => {
         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       >
         {Object.keys(CATEGORY_STYLES).map(cat => (
-          <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>
+          <option key={cat} value={cat}>{t(`categories.${cat}`)}</option>
         ))}
       </select>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -79,14 +81,14 @@ const EditForm: React.FC<EditFormProps> = ({ item, onSave, onCancel }) => {
           onChange={handleInputChange}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
-          <option value="none">Does not repeat</option>
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
+          <option value="none">{t('doesNotRepeat')}</option>
+          <option value="daily">{t('daily')}</option>
+          <option value="weekly">{t('weekly')}</option>
+          <option value="monthly">{t('monthly')}</option>
         </select>
         {editForm.recurrence && editForm.recurrence !== 'none' && (
           <div className="relative pt-2">
-            <label htmlFor="recurrenceEndDate" className="absolute -top-0.5 left-2 -mt-px inline-block bg-gray-50 px-1 text-xs font-medium text-gray-500">Repeat until</label>
+            <label htmlFor="recurrenceEndDate" className="absolute -top-0.5 left-2 -mt-px inline-block bg-gray-50 px-1 text-xs font-medium text-gray-500">{t('repeatUntil')}</label>
             <input
               id="recurrenceEndDate"
               type="date"
@@ -103,7 +105,7 @@ const EditForm: React.FC<EditFormProps> = ({ item, onSave, onCancel }) => {
         value={editForm.notes}
         onChange={handleInputChange}
         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        placeholder="Notes"
+        placeholder={t('notes')}
         rows={2}
       />
       <div className="flex gap-2">
@@ -112,7 +114,7 @@ const EditForm: React.FC<EditFormProps> = ({ item, onSave, onCancel }) => {
           className="flex-1 px-4 py-2 bg-green-600 text-white font-semibold rounded-lg flex items-center justify-center gap-2 hover:bg-green-700 transition-colors"
         >
           <Save className="w-4 h-4" />
-          Save
+          {t('save')}
         </button>
         <button
           type="button"
@@ -120,7 +122,7 @@ const EditForm: React.FC<EditFormProps> = ({ item, onSave, onCancel }) => {
           className="flex-1 px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg flex items-center justify-center gap-2 hover:bg-gray-600 transition-colors"
         >
           <X className="w-4 h-4" />
-          Cancel
+          {t('cancel')}
         </button>
       </div>
     </form>
