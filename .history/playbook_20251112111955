@@ -1,0 +1,546 @@
+---
+# Podman Container Build and Deploy Playbook
+# Builds container on bastion server and deploys to web server
+
+# Play 1: Build container image on bastion server
+- name: Build Container Image on Bastion
+  hosts: bastion  # 10.1.x.4
+  gather_facts: yes
+  become: yes
+  
+  vars:
+    app_name: "react-webapp"
+    image_name: "{{ app_name }}"
+    image_tag: "latest"
+    container_registry: "localhost:5000"  # or use Docker Hub/Quay.io
+    build_dir: "/tmp/container-build"
+    react_app_dir: "/path/to/your/react-app"  # Local path to React app source
+    
+  tasks:
+    - name: Install required packages on bastion
+      package:
+        name:
+          - podman
+          - buildah
+          - skopeo
+        state: present
+    
+    - name: Create build directory
+      file:
+        path: "{{ build_dir }}"
+        state: directory
+        mode: '0755'
+    
+    - name: Copy React application source to bastion
+      synchronize:
+        src: "{{ react_app_dir }}/"
+        dest: "{{ build_dir }}/"
+        delete: yes
+        rsync_opts:
+          - "--exclude=node_modules"
+          - "--exclude=build"
+          - "--exclude=dist"
+          - "--exclude=.git"
+          - "--exclude=.env.local"
+          - "--exclude=.vite"
+      delegate_to: localhost
+      tags:
+        - build
+    
+    - name: Create Containerfile for React app (Vite/CRA compatible)
+      copy:
+        dest: "{{ build_dir }}/Containerfile"
+        content: |
+          # Multi-stage build for React application
+          
+          # Stage 1: Build the React app
+          FROM node:18-alpine AS builder
+          
+          WORKDIR /app
+          
+          # Copy package files
+          COPY package*.json ./
+          
+          # Install all dependencies (including devDependencies needed for build)
+          RUN npm install
+          
+          # Copy all source code
+          COPY . .
+          
+          # Build the React app (works with both 'npm run build' from Vite or CRA)
+          RUN npm run build
+          
+          # Stage 2: Serve with Nginx
+          FROM nginx:alpine
+          
+          # Copy custom nginx config
+          COPY nginx.conf /etc/nginx/conf.d/default.conf
+          
+          # Copy built app from builder stage
+          # This works for both Vite (dist/) and Create React App (build/)
+          RUN rm -rf /usr/share/nginx/html/*
+          COPY --from=builder /app/dist /usr/share/nginx/html 2>/dev/null || \
+               COPY --from=builder /app/build /usr/share/nginx/html
+          
+          # Add healthcheck
+          HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+            CMD wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1
+          
+          EXPOSE 80
+          
+          CMD ["nginx", "-g", "daemon off;"]
+        mode: '0644'
+      tags:
+        - build
+    
+    - name: Create Nginx configuration for React SPA
+      copy:
+        dest: "{{ build_dir }}/nginx.conf"
+        content: |
+          server {
+              listen 80;
+              server_name localhost;
+              root /usr/share/nginx/html;
+              index index.html;
+              
+              # Gzip compression
+              gzip on;
+              gzip_vary on;
+              gzip_min_length 1024;
+              gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/javascript application/json;
+              
+              # Security headers
+              add_header X-Frame-Options "SAMEORIGIN" always;
+              add_header X-Content-Type-Options "nosniff" always;
+              add_header X-XSS-Protection "1; mode=block" always;
+              
+              # Cache static assets
+              location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+                  expires 1y;
+                  add_header Cache-Control "public, immutable";
+              }
+              
+              # React Router - serve index.html for all routes
+              location / {
+                  try_files $uri $uri/ /index.html;
+              }
+              
+              # API proxy (if needed)
+              location /api {
+                  proxy_pass http://backend-service:3000;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection 'upgrade';
+                  proxy_set_header Host $host;
+                  proxy_cache_bypass $http_upgrade;
+              }
+              
+              # Health check endpoint
+              location /health {
+                  access_log off;
+                  return 200 "healthy\n";
+                  add_header Content-Type text/plain;
+              }
+          }
+        mode: '0644'
+      tags:
+        - build
+    
+    - name: Create .dockerignore file
+      copy:
+        dest: "{{ build_dir }}/.dockerignore"
+        content: |
+          node_modules
+          npm-debug.log
+          .git
+          .gitignore
+          .env.local
+          .env.development.local
+          .env.test.local
+          .env.production.local
+          build
+          dist
+          .vite
+          .DS_Store
+          *.log
+        mode: '0644'
+      tags:
+        - build
+    
+    - name: Build container image with Podman
+      containers.podman.podman_image:
+        name: "{{ image_name }}"
+        tag: "{{ image_tag }}"
+        path: "{{ build_dir }}"
+        build:
+          file: "{{ build_dir }}/Containerfile"
+          force_rm: yes
+      register: build_result
+      tags:
+        - build
+    
+    - name: Tag image for registry
+      command: >
+        podman tag {{ image_name }}:{{ image_tag }}
+        {{ container_registry }}/{{ image_name }}:{{ image_tag }}
+      when: build_result is succeeded
+      tags:
+        - build
+    
+    - name: Save container image to tar file
+      command: >
+        podman save -o /tmp/{{ image_name }}.tar
+        {{ image_name }}:{{ image_tag }}
+      tags:
+        - export
+    
+    - name: Fetch container image to local machine
+      fetch:
+        src: "/tmp/{{ image_name }}.tar"
+        dest: "/tmp/{{ image_name }}.tar"
+        flat: yes
+      tags:
+        - export
+
+# Play 2: Deploy container to web server
+- name: Deploy Container to Web Server
+  hosts: web  # 10.1.x.5
+  gather_facts: yes
+  become: yes
+  
+  vars:
+    app_name: "react-webapp"
+    image_name: "{{ app_name }}"
+    image_tag: "latest"
+    container_name: "{{ app_name }}_container"
+    app_port: 80
+    container_user: "podman-user"
+    app_data_dir: "/opt/{{ app_name }}/data"
+    domain: "wwwXX.htf25.qubr.be"  # Your domain for Traefik
+    
+  tasks:
+    - name: Install Podman on web server
+      package:
+        name:
+          - podman
+          - podman-docker  # Docker compatibility
+        state: present
+    
+    - name: Create container user
+      user:
+        name: "{{ container_user }}"
+        state: present
+        shell: /bin/bash
+        createhome: yes
+        system: yes
+    
+    - name: Enable lingering for container user (rootless)
+      command: loginctl enable-linger {{ container_user }}
+      args:
+        creates: "/var/lib/systemd/linger/{{ container_user }}"
+    
+    - name: Create application data directory
+      file:
+        path: "{{ app_data_dir }}"
+        state: directory
+        owner: "{{ container_user }}"
+        group: "{{ container_user }}"
+        mode: '0755'
+    
+    - name: Copy container image to web server
+      copy:
+        src: "/tmp/{{ image_name }}.tar"
+        dest: "/tmp/{{ image_name }}.tar"
+    
+    - name: Load container image
+      command: podman load -i /tmp/{{ image_name }}.tar
+      become_user: "{{ container_user }}"
+      register: load_result
+    
+    - name: Stop existing container if running
+      containers.podman.podman_container:
+        name: "{{ container_name }}"
+        state: absent
+      become_user: "{{ container_user }}"
+      ignore_errors: yes
+    
+    - name: Run container with Podman and Traefik labels
+      containers.podman.podman_container:
+        name: "{{ container_name }}"
+        image: "{{ image_name }}:{{ image_tag }}"
+        state: started
+        recreate: yes
+        network: traefik-net
+        volumes:
+          - "{{ app_data_dir }}:/data:Z"
+        env:
+          APP_ENV: "production"
+          APP_PORT: "{{ app_port }}"
+        label:
+          traefik.enable: "true"
+          traefik.http.routers.{{ container_name }}.rule: "Host(`{{ domain | default('wwwXX.htf25.qubr.be') }}`)"
+          traefik.http.routers.{{ container_name }}.entrypoints: "websecure"
+          traefik.http.routers.{{ container_name }}.tls: "true"
+          traefik.http.routers.{{ container_name }}.tls.certresolver: "letsencrypt"
+          traefik.http.services.{{ container_name }}.loadbalancer.server.port: "{{ app_port }}"
+          traefik.http.routers.{{ container_name }}-http.rule: "Host(`{{ domain | default('wwwXX.htf25.qubr.be') }}`)"
+          traefik.http.routers.{{ container_name }}-http.entrypoints: "web"
+          traefik.http.routers.{{ container_name }}-http.middlewares: "redirect-to-https"
+          traefik.http.middlewares.redirect-to-https.redirectscheme.scheme: "https"
+          traefik.http.middlewares.redirect-to-https.redirectscheme.permanent: "true"
+        restart_policy: always
+        generate_systemd:
+          path: "/home/{{ container_user }}/.config/systemd/user/"
+          restart_policy: always
+          time: 120
+          names: true
+      become_user: "{{ container_user }}"
+      register: container_result
+    
+    - name: Enable and start container as systemd service
+      systemd:
+        name: "container-{{ container_name }}"
+        enabled: yes
+        state: started
+        scope: user
+        daemon_reload: yes
+      become_user: "{{ container_user }}"
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/{{ container_user_uid.stdout }}"
+      when: container_result is succeeded
+    
+    - name: Get container user UID
+      command: id -u {{ container_user }}
+      register: container_user_uid
+      changed_when: false
+    
+    - name: Configure firewall for container port
+      firewalld:
+        port: "{{ host_port }}/tcp"
+        permanent: yes
+        state: enabled
+        immediate: yes
+      when: ansible_os_family == "RedHat"
+      ignore_errors: yes
+    
+    - name: Wait for container to be ready
+      uri:
+        url: "http://localhost/health"
+        status_code: 200
+      register: health_check
+      until: health_check.status == 200
+      retries: 10
+      delay: 5
+      ignore_errors: yes
+    
+    - name: Get container status
+      command: podman ps -a --filter name={{ container_name }}
+      become_user: "{{ container_user }}"
+      register: container_status
+      changed_when: false
+    
+    - name: Display container status
+      debug:
+        var: container_status.stdout_lines
+    
+    - name: Clean up image tar file
+      file:
+        path: "/tmp/{{ image_name }}.tar"
+        state: absent
+
+# Play 3: Configure Traefik Reverse Proxy
+- name: Deploy and Configure Traefik
+  hosts: web
+  become: yes
+  
+  vars:
+    domain: "wwwXX.htf25.qubr.be"
+    traefik_version: "v2.10"
+    traefik_container_name: "traefik"
+    traefik_user: "podman-user"
+    traefik_config_dir: "/etc/traefik"
+    traefik_certs_dir: "/etc/traefik/certs"
+    use_letsencrypt: true
+    letsencrypt_email: "admin@example.com"
+    
+  tasks:
+    - name: Create Traefik configuration directory
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ traefik_user }}"
+        group: "{{ traefik_user }}"
+        mode: '0755'
+      loop:
+        - "{{ traefik_config_dir }}"
+        - "{{ traefik_certs_dir }}"
+        - "{{ traefik_config_dir }}/dynamic"
+    
+    - name: Create Traefik static configuration
+      copy:
+        dest: "{{ traefik_config_dir }}/traefik.yml"
+        owner: "{{ traefik_user }}"
+        group: "{{ traefik_user }}"
+        mode: '0644'
+        content: |
+          global:
+            checkNewVersion: true
+            sendAnonymousUsage: false
+          
+          api:
+            dashboard: true
+            insecure: false
+          
+          entryPoints:
+            web:
+              address: ":80"
+              http:
+                redirections:
+                  entryPoint:
+                    to: websecure
+                    scheme: https
+            
+            websecure:
+              address: ":443"
+              http:
+                tls:
+                  certResolver: letsencrypt
+          
+          providers:
+            docker:
+              endpoint: "unix:///run/user/{{ container_user_uid.stdout }}/podman/podman.sock"
+              exposedByDefault: false
+              network: traefik-net
+            
+            file:
+              directory: "{{ traefik_config_dir }}/dynamic"
+              watch: true
+          
+          certificatesResolvers:
+            letsencrypt:
+              acme:
+                email: "{{ letsencrypt_email }}"
+                storage: "{{ traefik_certs_dir }}/acme.json"
+                httpChallenge:
+                  entryPoint: web
+          
+          log:
+            level: INFO
+          
+          accessLog:
+            filePath: "/var/log/traefik/access.log"
+      when: use_letsencrypt
+    
+    - name: Create Traefik static configuration (without Let's Encrypt)
+      copy:
+        dest: "{{ traefik_config_dir }}/traefik.yml"
+        owner: "{{ traefik_user }}"
+        group: "{{ traefik_user }}"
+        mode: '0644'
+        content: |
+          global:
+            checkNewVersion: true
+            sendAnonymousUsage: false
+          
+          api:
+            dashboard: true
+            insecure: false
+          
+          entryPoints:
+            web:
+              address: ":80"
+            
+            websecure:
+              address: ":443"
+          
+          providers:
+            docker:
+              endpoint: "unix:///run/user/{{ container_user_uid.stdout }}/podman/podman.sock"
+              exposedByDefault: false
+              network: traefik-net
+            
+            file:
+              directory: "{{ traefik_config_dir }}/dynamic"
+              watch: true
+          
+          log:
+            level: INFO
+      when: not use_letsencrypt
+    
+    - name: Create ACME storage file
+      file:
+        path: "{{ traefik_certs_dir }}/acme.json"
+        state: touch
+        owner: "{{ traefik_user }}"
+        group: "{{ traefik_user }}"
+        mode: '0600'
+      when: use_letsencrypt
+    
+    - name: Create Traefik log directory
+      file:
+        path: /var/log/traefik
+        state: directory
+        owner: "{{ traefik_user }}"
+        group: "{{ traefik_user }}"
+        mode: '0755'
+    
+    - name: Create Podman network for Traefik
+      containers.podman.podman_network:
+        name: traefik-net
+        state: present
+      become_user: "{{ traefik_user }}"
+    
+    - name: Run Traefik container
+      containers.podman.podman_container:
+        name: "{{ traefik_container_name }}"
+        image: "docker.io/traefik:{{ traefik_version }}"
+        state: started
+        recreate: yes
+        network: traefik-net
+        ports:
+          - "80:80"
+          - "443:443"
+        volumes:
+          - "{{ traefik_config_dir }}/traefik.yml:/etc/traefik/traefik.yml:ro"
+          - "{{ traefik_config_dir }}/dynamic:/etc/traefik/dynamic:ro"
+          - "{{ traefik_certs_dir }}:/etc/traefik/certs:rw"
+          - "/var/log/traefik:/var/log/traefik:rw"
+          - "/run/user/{{ container_user_uid.stdout }}/podman/podman.sock:/var/run/docker.sock:ro"
+        restart_policy: always
+        generate_systemd:
+          path: "/home/{{ traefik_user }}/.config/systemd/user/"
+          restart_policy: always
+          time: 120
+          names: true
+      become_user: "{{ traefik_user }}"
+    
+    - name: Configure firewall for HTTP/HTTPS
+      firewalld:
+        service: "{{ item }}"
+        permanent: yes
+        state: enabled
+        immediate: yes
+      loop:
+        - http
+        - https
+      when: ansible_os_family == "RedHat"
+      ignore_errors: yes
+    
+    - name: Enable Traefik systemd service
+      systemd:
+        name: "container-{{ traefik_container_name }}"
+        enabled: yes
+        state: started
+        scope: user
+        daemon_reload: yes
+      become_user: "{{ traefik_user }}"
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/{{ container_user_uid.stdout }}"
+  
+  handlers:
+    - name: restart traefik
+      containers.podman.podman_container:
+        name: "{{ traefik_container_name }}"
+        state: started
+        restart: yes
+      become_user: "{{ traefik_user }}"

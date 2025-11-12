@@ -4,7 +4,7 @@ import { getInitialSchedule, DAYS } from './constants';
 import DayView from './components/DayView';
 import WeekView from './components/WeekView';
 import Modal from './components/Modal';
-import { parseTimeRange, doesOverlap } from './utils/time';
+import { parseTimeRange, doesOverlap, getWeekNumber, getStartDateOfWeek } from './utils/time';
 
 // --- Localization System ---
 // To avoid creating new files as per the project constraints, the localization
@@ -152,6 +152,7 @@ const AppContent: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [view, setView] = useState<'day' | 'week'>('day');
+  const [selectedWeek, setSelectedWeek] = useState(() => getWeekNumber(new Date()));
   const [errorModal, setErrorModal] = useState({ isOpen: false, title: '', message: '' });
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -317,15 +318,6 @@ const AppContent: React.FC = () => {
         const date = new Date(Date.UTC(year, month - 1, day, 23, 59, 59));
         return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     };
-
-    const getWeekStartDate = () => {
-        const today = new Date();
-        const dayOfWeek = today.getDay();
-        const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-        const monday = new Date(today.setDate(diff));
-        monday.setHours(0, 0, 0, 0);
-        return monday;
-    };
     
     const parseTimeAndDuration = (item: ScheduleItem, eventDate: Date): [Date, Date] | null => {
         const startDate = new Date(eventDate);
@@ -362,7 +354,7 @@ const AppContent: React.FC = () => {
       'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//MyScheduleApp//EN',
     ].join('\r\n');
     
-    const weekStartDate = getWeekStartDate();
+    const weekStartDate = getStartDateOfWeek(selectedWeek, new Date().getFullYear());
 
     DAYS.forEach((day, dayIndex) => {
       schedule[day].forEach(item => {
@@ -412,6 +404,8 @@ const AppContent: React.FC = () => {
           setView={setView}
           onExportToCSV={handleExportToCSV}
           onExportToICS={handleExportToICS}
+          selectedWeek={selectedWeek}
+          onSetSelectedWeek={setSelectedWeek}
         />
       ) : (
         <DayView 
@@ -430,6 +424,8 @@ const AppContent: React.FC = () => {
           onSetView={setView}
           onExportToCSV={handleExportToCSV}
           onExportToICS={handleExportToICS}
+          selectedWeek={selectedWeek}
+          onSetSelectedWeek={setSelectedWeek}
         />
       )}
       <Modal

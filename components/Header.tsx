@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, Calendar, Download, CalendarPlus } from './icons';
+import { Menu, Calendar, Download, CalendarPlus, ChevronLeft, ChevronRight } from './icons';
 import { useLocalization } from '../App';
 
 interface HeaderProps {
@@ -7,9 +7,11 @@ interface HeaderProps {
   onResetToDefault: () => void;
   onExportToCSV: () => void;
   onExportToICS: () => void;
+  selectedWeek: number;
+  onSetSelectedWeek: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const Header: React.FC<HeaderProps> = ({ onSetView, onResetToDefault, onExportToCSV, onExportToICS }) => {
+const Header: React.FC<HeaderProps> = ({ onSetView, onResetToDefault, onExportToCSV, onExportToICS, selectedWeek, onSetSelectedWeek }) => {
   const [showMenu, setShowMenu] = useState(false);
   const { language, setLanguage, t } = useLocalization();
 
@@ -17,10 +19,31 @@ const Header: React.FC<HeaderProps> = ({ onSetView, onResetToDefault, onExportTo
     <div className="bg-white shadow-md sticky top-0 z-20">
       <div className="max-w-4xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between mb-3">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <Calendar className="w-6 h-6 text-blue-600" />
-            {t('appName')}
-          </h1>
+          <div className="flex-1 min-w-0 flex items-center gap-2 sm:gap-4">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
+              <Calendar className="w-6 h-6 text-blue-600" />
+              <span className="truncate">{t('appName')}</span>
+            </h1>
+            <div className="flex items-center gap-1 bg-gray-100 rounded-full p-1">
+              <button
+                onClick={() => onSetSelectedWeek(prev => Math.max(1, prev - 1))}
+                className="p-1 text-gray-600 hover:bg-gray-200 rounded-full transition-colors"
+                aria-label="Previous week"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <span className="font-semibold text-gray-700 text-sm whitespace-nowrap px-1 select-none">
+                Week {selectedWeek}
+              </span>
+              <button
+                onClick={() => onSetSelectedWeek(prev => Math.min(53, prev + 1))}
+                className="p-1 text-gray-600 hover:bg-gray-200 rounded-full transition-colors"
+                aria-label="Next week"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 bg-gray-100 rounded-full p-1 text-sm">
               <button 
