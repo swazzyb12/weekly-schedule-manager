@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Menu, Calendar, Download, CalendarPlus, ChevronLeft, ChevronRight, Moon, Sun, BarChart2, Upload } from './icons';
+import { Menu, Calendar, Download, CalendarPlus, ChevronLeft, ChevronRight, Moon, Sun, BarChart2, Upload, Activity } from './icons';
 import { useLocalization, useTheme } from '../App';
 import { triggerHaptic } from '../utils/native';
 
@@ -13,6 +13,7 @@ interface HeaderProps {
   onShowAnalytics?: () => void;
   onBackupData?: () => void;
   onRestoreData?: (jsonString: string) => void;
+  onOpenHabitTracker?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
@@ -24,7 +25,8 @@ const Header: React.FC<HeaderProps> = ({
   onSetSelectedWeek, 
   onShowAnalytics,
   onBackupData,
-  onRestoreData
+  onRestoreData,
+  onOpenHabitTracker
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const { language, setLanguage, t } = useLocalization();
@@ -135,6 +137,17 @@ const Header: React.FC<HeaderProps> = ({
                 {t('weeklyAnalytics')}
               </button>
             )}
+
+            {onOpenHabitTracker && (
+              <button
+                onClick={() => { triggerHaptic('medium'); onOpenHabitTracker(); setShowMenu(false); }}
+                className="w-full px-4 py-2 flex items-center justify-center gap-2 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition-colors"
+              >
+                <Activity className="w-4 h-4" />
+                {t('habitTracker')}
+              </button>
+            )}
+
             <button
               onClick={() => { triggerHaptic('medium'); onExportToICS(); setShowMenu(false); }}
               className="w-full px-4 py-2 flex items-center justify-center gap-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"

@@ -12,9 +12,10 @@ interface WeekViewProps {
   onExportToICS: () => void;
   selectedWeek: number;
   onSetSelectedWeek: React.Dispatch<React.SetStateAction<number>>;
+  onOpenHabitTracker?: () => void;
 }
 
-const WeekView: React.FC<WeekViewProps> = ({ schedule, setView, onExportToCSV, onExportToICS, selectedWeek, onSetSelectedWeek }) => {
+const WeekView: React.FC<WeekViewProps> = ({ schedule, setView, onExportToCSV, onExportToICS, selectedWeek, onSetSelectedWeek, onOpenHabitTracker }) => {
   const { t } = useLocalization();
 
   return (

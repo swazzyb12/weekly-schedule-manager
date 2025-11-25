@@ -1,9 +1,10 @@
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
-import type { Schedule, Day, ScheduleItem } from './types';
+import type { Schedule, Day, ScheduleItem, Habit, HabitLog } from './types';
 import { getInitialSchedule, DAYS, TEMPLATES } from './constants';
 import DayView from './components/DayView';
 import WeekView from './components/WeekView';
 import Modal from './components/Modal';
+import HabitTracker from './components/HabitTracker';
 import { parseTimeRange, doesOverlap, getWeekNumber, getStartDateOfWeek } from './utils/time';
 import { requestNotificationPermissions, scheduleNotificationsForWeek } from './utils/native';
 
@@ -73,7 +74,15 @@ const translations: Record<string, Record<string, string>> = {
     restoreConfirmTitle: "Confirm Restore",
     restoreConfirmMessage: "This will overwrite your current schedule and templates. Are you sure?",
     restoreSuccess: "Data restored successfully!",
-    restoreError: "Invalid data file."
+    restoreError: "Invalid data file.",
+    habitTracker: "Habit Tracker",
+    dailyProgress: "Daily Progress",
+    noHabitsYet: "No habits added yet. Start building your routine!",
+    newHabitPlaceholder: "Enter new habit...",
+    addHabit: "Add Habit",
+    add: "Add",
+    habitPerformance: "Habit Performance",
+    timeDistribution: "Time Distribution"
   },
   nl: {
     appName: "Mijn Schema",
@@ -136,7 +145,15 @@ const translations: Record<string, Record<string, string>> = {
     restoreConfirmTitle: "Herstel Bevestigen",
     restoreConfirmMessage: "Dit overschrijft je huidige schema en sjablonen. Weet je het zeker?",
     restoreSuccess: "Gegevens succesvol hersteld!",
-    restoreError: "Ongeldig gegevensbestand."
+    restoreError: "Ongeldig gegevensbestand.",
+    habitTracker: "Gewoonte Tracker",
+    dailyProgress: "Dagelijkse Voortgang",
+    noHabitsYet: "Nog geen gewoontes toegevoegd. Begin met bouwen aan je routine!",
+    newHabitPlaceholder: "Nieuwe gewoonte invoeren...",
+    addHabit: "Gewoonte Toevoegen",
+    add: "Toevoegen",
+    habitPerformance: "Gewoonte Prestaties",
+    timeDistribution: "Tijdsverdeling"
   },
 };
 
@@ -230,9 +247,62 @@ const AppContent: React.FC = () => {
     return TEMPLATES;
   });
 
+  const [habits, setHabits] = useState<Habit[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('habits');
+      if (saved) return JSON.parse(saved);
+    }
+    return [];
+  });
+
+  const [habitLogs, setHabitLogs] = useState<HabitLog>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('habitLogs');
+      if (saved) return JSON.parse(saved);
+    }
+    return {};
+  });
+
+  const [showHabitTracker, setShowHabitTracker] = useState(false);
+
   useEffect(() => {
     localStorage.setItem('templates', JSON.stringify(templates));
   }, [templates]);
+
+  useEffect(() => {
+    localStorage.setItem('habits', JSON.stringify(habits));
+  }, [habits]);
+
+  useEffect(() => {
+    localStorage.setItem('habitLogs', JSON.stringify(habitLogs));
+  }, [habitLogs]);
+
+  const handleAddHabit = (habit: Habit) => {
+    setHabits(prev => [...prev, habit]);
+  };
+
+  const handleDeleteHabit = (id: string) => {
+    setHabits(prev => prev.filter(h => h.id !== id));
+  };
+
+  const handleToggleHabit = (id: string, date: string) => {
+    setHabitLogs(prev => {
+      const currentDayLogs = prev[date] || [];
+      const isCompleted = currentDayLogs.includes(id);
+      
+      let newDayLogs;
+      if (isCompleted) {
+        newDayLogs = currentDayLogs.filter(hId => hId !== id);
+      } else {
+        newDayLogs = [...currentDayLogs, id];
+      }
+
+      return {
+        ...prev,
+        [date]: newDayLogs
+      };
+    });
+  };
 
   const handleAddTemplate = (template: Partial<ScheduleItem>) => {
     setTemplates(prev => [...prev, template]);
@@ -467,7 +537,8 @@ const AppContent: React.FC = () => {
       timestamp: new Date().toISOString(),
       schedule,
       templates,
-      // Add other state here as we add features (habits, etc.)
+      habits,
+      habitLogs,
     };
     
     const jsonString = JSON.stringify(data, null, 2);
@@ -496,7 +567,8 @@ const AppContent: React.FC = () => {
       const confirmAction = () => {
         setSchedule(data.schedule);
         setTemplates(data.templates);
-        // Restore other state here
+        if (data.habits) setHabits(data.habits);
+        if (data.habitLogs) setHabitLogs(data.habitLogs);
         closeConfirmModal();
         alert(t('restoreSuccess'));
       };
@@ -531,6 +603,7 @@ const AppContent: React.FC = () => {
           onExportToICS={handleExportToICS}
           selectedWeek={selectedWeek}
           onSetSelectedWeek={setSelectedWeek}
+          onOpenHabitTracker={() => setShowHabitTracker(true)}
         />
       ) : (
         <DayView 
@@ -555,8 +628,23 @@ const AppContent: React.FC = () => {
           onAddTemplate={handleAddTemplate}
           onBackupData={handleBackupData}
           onRestoreData={handleRestoreData}
+          onOpenHabitTracker={() => setShowHabitTracker(true)}
+          habits={habits}
+          habitLogs={habitLogs}
         />
       )}
+      
+      {showHabitTracker && (
+        <HabitTracker
+          habits={habits}
+          habitLogs={habitLogs}
+          onAddHabit={handleAddHabit}
+          onDeleteHabit={handleDeleteHabit}
+          onToggleHabit={handleToggleHabit}
+          onClose={() => setShowHabitTracker(false)}
+        />
+      )}
+
       <Modal
         isOpen={errorModal.isOpen}
         onClose={closeErrorModal}

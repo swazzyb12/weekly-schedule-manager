@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Schedule, Day, ScheduleItem } from '../types';
+import type { Schedule, Day, ScheduleItem, Habit, HabitLog } from '../types';
 import Header from './Header';
 import DayTabs from './DayTabs';
 import ScheduleCard from './ScheduleCard';
@@ -32,6 +32,9 @@ interface DayViewProps {
   onAddTemplate: (template: Partial<ScheduleItem>) => void;
   onBackupData: () => void;
   onRestoreData: (jsonString: string) => void;
+  onOpenHabitTracker: () => void;
+  habits: Habit[];
+  habitLogs: HabitLog;
 }
 
 const DayView: React.FC<DayViewProps> = (props) => {
@@ -57,6 +60,9 @@ const DayView: React.FC<DayViewProps> = (props) => {
     onAddTemplate,
     onBackupData,
     onRestoreData,
+    onOpenHabitTracker,
+    habits,
+    habitLogs,
   } = props;
   
   const { t } = useLocalization();
@@ -84,6 +90,7 @@ const DayView: React.FC<DayViewProps> = (props) => {
         onShowAnalytics={() => setShowAnalytics(true)}
         onBackupData={onBackupData}
         onRestoreData={onRestoreData}
+        onOpenHabitTracker={onOpenHabitTracker}
       />
       <DayTabs selectedDay={selectedDay} onSetSelectedDay={onSetSelectedDay} />
       
@@ -141,6 +148,8 @@ const DayView: React.FC<DayViewProps> = (props) => {
       {showAnalytics && (
         <Analytics 
           schedule={schedule} 
+          habits={habits}
+          habitLogs={habitLogs}
           onClose={() => setShowAnalytics(false)} 
         />
       )}

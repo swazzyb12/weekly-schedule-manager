@@ -1,4 +1,3 @@
-
 export type Category = 
   | 'anchor' 
   | 'school' 
@@ -26,3 +25,11 @@ export interface ScheduleItem {
 export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 
 export type Schedule = Record<Day, ScheduleItem[]>;
+
+export interface Habit {
+  id: string;
+  title: string;
+  category: 'health' | 'learning' | 'mindfulness' | 'productivity' | 'other';
+}
+
+export type HabitLog = Record<string, string[]>; // Key: YYYY-MM-DD, Value: Array of completed Habit IDs

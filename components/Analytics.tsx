@@ -1,15 +1,18 @@
 import React, { useMemo } from 'react';
-import type { Schedule } from '../types';
+import type { Schedule, Habit, HabitLog } from '../types';
 import { CATEGORY_STYLES, CATEGORY_ICONS, DAYS } from '../constants';
 import { useLocalization } from '../App';
 import { parseTimeRange } from '../utils/time';
+import { Activity, CheckCircle } from './icons';
 
 interface AnalyticsProps {
   schedule: Schedule;
+  habits: Habit[];
+  habitLogs: HabitLog;
   onClose: () => void;
 }
 
-const Analytics: React.FC<AnalyticsProps> = ({ schedule, onClose }) => {
+const Analytics: React.FC<AnalyticsProps> = ({ schedule, habits, habitLogs, onClose }) => {
   const { t } = useLocalization();
 
   const stats = useMemo(() => {
@@ -39,6 +42,29 @@ const Analytics: React.FC<AnalyticsProps> = ({ schedule, onClose }) => {
       .sort((a, b) => b.minutes - a.minutes);
   }, [schedule]);
 
+  const habitStats = useMemo(() => {
+    // Get last 7 days dates
+    const dates: string[] = [];
+    const today = new Date();
+    // Start from today and go back 6 days (total 7 days)
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      dates.push(d.toISOString().split('T')[0]);
+    }
+
+    return habits.map(habit => {
+      const completedCount = dates.reduce((acc, date) => {
+        return acc + (habitLogs[date]?.includes(habit.id) ? 1 : 0);
+      }, 0);
+      return {
+        ...habit,
+        completedCount,
+        percentage: Math.round((completedCount / 7) * 100)
+      };
+    });
+  }, [habits, habitLogs]);
+
   const formatDuration = (minutes: number) => {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
@@ -57,8 +83,13 @@ const Analytics: React.FC<AnalyticsProps> = ({ schedule, onClose }) => {
           </button>
         </div>
         
-        <div className="p-4 overflow-y-auto">
+        <div className="p-4 overflow-y-auto space-y-6">
+          {/* Time Distribution */}
           <div className="space-y-4">
+            <h3 className="font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+              <Activity className="w-5 h-5" />
+              {t('timeDistribution')}
+            </h3>
             {stats.map(({ category, minutes, percentage }) => {
               const style = CATEGORY_STYLES[category as any] || CATEGORY_STYLES.personal;
               return (
@@ -71,14 +102,6 @@ const Analytics: React.FC<AnalyticsProps> = ({ schedule, onClose }) => {
                     <span className="text-gray-500 dark:text-gray-400">{formatDuration(minutes)} ({Math.round(percentage)}%)</span>
                   </div>
                   <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full ${style.bg.replace('bg-', 'bg-opacity-100 bg-')}`} // Hack to get solid color if bg is light
-                      style={{ 
-                        width: `${percentage}%`,
-                        backgroundColor: style.border.replace('border-', 'var(--tw-colors-') // Try to use border color for bar
-                      }} 
-                    />
-                    {/* Fallback inline style for color since we use classes */}
                     <div 
                         className={`h-full rounded-full`}
                         style={{ 
@@ -94,6 +117,30 @@ const Analytics: React.FC<AnalyticsProps> = ({ schedule, onClose }) => {
                 <p className="text-center text-gray-500 dark:text-gray-400 py-4">{t('noData')}</p>
             )}
           </div>
+
+          {/* Habit Performance */}
+          {habits.length > 0 && (
+            <div className="space-y-4 pt-4 border-t dark:border-gray-700">
+              <h3 className="font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <CheckCircle className="w-5 h-5" />
+                {t('habitPerformance')} (Last 7 Days)
+              </h3>
+              {habitStats.map((habit) => (
+                <div key={habit.id} className="space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium text-gray-700 dark:text-gray-200">{habit.title}</span>
+                    <span className="text-gray-500 dark:text-gray-400">{habit.completedCount}/7 days</span>
+                  </div>
+                  <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full rounded-full bg-green-500"
+                      style={{ width: `${habit.percentage}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
