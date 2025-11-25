@@ -255,7 +255,11 @@ const AppContent: React.FC = () => {
     }
   }, [schedule]);
 
-  const [selectedDay, setSelectedDay] = useState<Day>('monday');
+  const [selectedDay, setSelectedDay] = useState<Day>(() => {
+    const todayIndex = new Date().getDay();
+    const dayIndex = (todayIndex + 6) % 7;
+    return DAYS[dayIndex];
+  });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [view, setView] = useState<'day' | 'week'>('day');
