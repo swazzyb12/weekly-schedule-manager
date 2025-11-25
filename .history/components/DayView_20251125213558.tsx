@@ -82,8 +82,6 @@ const DayView: React.FC<DayViewProps> = (props) => {
         selectedWeek={selectedWeek}
         onSetSelectedWeek={onSetSelectedWeek}
         onShowAnalytics={() => setShowAnalytics(true)}
-        onBackupData={onBackupData}
-        onRestoreData={onRestoreData}
       />
       <DayTabs selectedDay={selectedDay} onSetSelectedDay={onSetSelectedDay} />
       

@@ -553,8 +553,6 @@ const AppContent: React.FC = () => {
           onSetSelectedWeek={setSelectedWeek}
           templates={templates}
           onAddTemplate={handleAddTemplate}
-          onBackupData={handleBackupData}
-          onRestoreData={handleRestoreData}
         />
       )}
       <Modal

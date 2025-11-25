@@ -130,14 +130,8 @@ const translations: Record<string, Record<string, string>> = {
     "categories.personal": "Persoonlijk",
     "categories.social": "Sociaal",
     "categories.church": "Kerk",
-    "categories.planning": "Planning",
-    backupData: "Backup Gegevens",
-    restoreData: "Herstel Gegevens",
-    restoreConfirmTitle: "Herstel Bevestigen",
-    restoreConfirmMessage: "Dit overschrijft je huidige schema en sjablonen. Weet je het zeker?",
-    restoreSuccess: "Gegevens succesvol hersteld!",
-    restoreError: "Ongeldig gegevensbestand."
-  },
+    "categories.planning": "Planning"
+  }
 };
 
 type Language = 'en' | 'nl';
@@ -461,63 +455,6 @@ const AppContent: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleBackupData = () => {
-    const data = {
-      version: 1,
-      timestamp: new Date().toISOString(),
-      schedule,
-      templates,
-      // Add other state here as we add features (habits, etc.)
-    };
-    
-    const jsonString = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    const date = new Date().toISOString().split('T')[0];
-    link.setAttribute('download', `schedule-backup-${date}.json`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleRestoreData = (jsonString: string) => {
-    try {
-      const data = JSON.parse(jsonString);
-      
-      // Basic validation
-      if (!data.schedule || !data.templates) {
-        throw new Error('Invalid backup file format');
-      }
-
-      const confirmAction = () => {
-        setSchedule(data.schedule);
-        setTemplates(data.templates);
-        // Restore other state here
-        closeConfirmModal();
-        alert(t('restoreSuccess'));
-      };
-
-      setConfirmModal({
-        isOpen: true,
-        title: t('restoreConfirmTitle'),
-        message: t('restoreConfirmMessage'),
-        onConfirm: confirmAction
-      });
-
-    } catch (e) {
-      console.error('Restore failed:', e);
-      setErrorModal({
-        isOpen: true,
-        title: 'Error',
-        message: t('restoreError')
-      });
-    }
-  };
-
   const closeErrorModal = () => setErrorModal({ isOpen: false, title: '', message: '' });
   const closeConfirmModal = () => setConfirmModal({ isOpen: false, title: '', message: '' });
 
@@ -553,8 +490,6 @@ const AppContent: React.FC = () => {
           onSetSelectedWeek={setSelectedWeek}
           templates={templates}
           onAddTemplate={handleAddTemplate}
-          onBackupData={handleBackupData}
-          onRestoreData={handleRestoreData}
         />
       )}
       <Modal

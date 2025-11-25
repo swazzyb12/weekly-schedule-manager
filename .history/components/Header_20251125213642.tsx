@@ -149,31 +149,6 @@ const Header: React.FC<HeaderProps> = ({
               <Download className="w-4 h-4" />
               {t('exportToCSV')}
             </button>
-            
-            {onBackupData && (
-              <button
-                onClick={() => { triggerHaptic('medium'); onBackupData(); setShowMenu(false); }}
-                className="w-full px-4 py-2 flex items-center justify-center gap-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                {t('backupData')}
-              </button>
-            )}
-
-            {onRestoreData && (
-              <button
-                onClick={() => { 
-                  triggerHaptic('medium'); 
-                  fileInputRef.current?.click(); 
-                  setShowMenu(false); 
-                }}
-                className="w-full px-4 py-2 flex items-center justify-center gap-2 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
-              >
-                <Upload className="w-4 h-4" />
-                {t('restoreData')}
-              </button>
-            )}
-
             <button
               onClick={() => { triggerHaptic('medium'); onResetToDefault(); setShowMenu(false); }}
               className="w-full px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
@@ -183,13 +158,6 @@ const Header: React.FC<HeaderProps> = ({
           </div>
         )}
       </div>
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept=".json"
-        className="hidden"
-      />
     </div>
   );
 };
