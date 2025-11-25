@@ -3,7 +3,7 @@ import React from 'react';
 import { motion, PanInfo } from 'framer-motion';
 import type { ScheduleItem } from '../types';
 import { CATEGORY_STYLES, CATEGORY_ICONS } from '../constants';
-import { Clock, Edit2, Trash2, Repeat, Play } from './icons';
+import { Clock, Edit2, Trash2, Repeat, Play, Check } from './icons';
 import { useLocalization } from '../App';
 import { triggerHaptic } from '../utils/native';
 
@@ -12,9 +12,11 @@ interface ScheduleCardProps {
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onFocus: (item: ScheduleItem) => void;
+  isCompleted?: boolean;
+  onToggle?: () => void;
 }
 
-const ScheduleCard: React.FC<ScheduleCardProps> = ({ item, onEdit, onDelete, onFocus }) => {
+const ScheduleCard: React.FC<ScheduleCardProps> = ({ item, onEdit, onDelete, onFocus, isCompleted, onToggle }) => {
   const style = CATEGORY_STYLES[item.category] || CATEGORY_STYLES.personal;
   const { t, locale } = useLocalization();
 
@@ -49,6 +51,22 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({ item, onEdit, onDelete, onF
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 flex-1 min-w-0">
+            {onToggle && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  triggerHaptic('light');
+                  onToggle();
+                }}
+                className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 ${
+                  isCompleted 
+                    ? 'bg-green-500 border-green-500' 
+                    : 'border-gray-300 dark:border-gray-600 hover:border-green-500'
+                }`}
+              >
+                {isCompleted && <Check className="w-4 h-4 text-white" />}
+              </button>
+            )}
             <span className="text-2xl mt-1">{CATEGORY_ICONS[item.category]}</span>
             <div className="flex-1 min-w-0">
               <h3 className={`font-bold text-lg ${style.text} dark:text-white truncate`}>{item.activity}</h3>

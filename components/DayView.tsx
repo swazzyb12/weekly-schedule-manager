@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Schedule, Day, ScheduleItem, Habit, HabitLog } from '../types';
+import type { Schedule, Day, ScheduleItem, Habit, HabitLog, UserStats, CompletionLog } from '../types';
 import Header from './Header';
 import DayTabs from './DayTabs';
 import ScheduleCard from './ScheduleCard';
@@ -38,6 +38,9 @@ interface DayViewProps {
   onOpenMoodTracker: (date: string) => void;
   habits: Habit[];
   habitLogs: HabitLog;
+  userStats: UserStats;
+  completionLog: CompletionLog;
+  onToggleScheduleItem: (id: string, date: string) => void;
 }
 
 const DayView: React.FC<DayViewProps> = (props) => {
@@ -67,6 +70,9 @@ const DayView: React.FC<DayViewProps> = (props) => {
     onOpenMoodTracker,
     habits,
     habitLogs,
+    userStats,
+    completionLog,
+    onToggleScheduleItem,
   } = props;
   
   const { t } = useLocalization();
@@ -82,14 +88,15 @@ const DayView: React.FC<DayViewProps> = (props) => {
       notes: "",
   };
 
+  const year = new Date().getFullYear();
+  const startDate = getStartDateOfWeek(selectedWeek, year);
+  const dayIndex = DAYS.indexOf(selectedDay);
+  const date = new Date(startDate);
+  date.setDate(startDate.getDate() + dayIndex);
+  const currentDateString = date.toISOString().split('T')[0];
+
   const handleOpenMoodTracker = () => {
-    const year = new Date().getFullYear();
-    const startDate = getStartDateOfWeek(selectedWeek, year);
-    const dayIndex = DAYS.indexOf(selectedDay);
-    const date = new Date(startDate);
-    date.setDate(startDate.getDate() + dayIndex);
-    const dateString = date.toISOString().split('T')[0];
-    onOpenMoodTracker(dateString);
+    onOpenMoodTracker(currentDateString);
   };
 
   return (
@@ -106,6 +113,7 @@ const DayView: React.FC<DayViewProps> = (props) => {
         onRestoreData={onRestoreData}
         onOpenHabitTracker={onOpenHabitTracker}
         onOpenMoodTracker={handleOpenMoodTracker}
+        userStats={userStats}
       />
       <DayTabs selectedDay={selectedDay} onSetSelectedDay={onSetSelectedDay} />
       
@@ -126,6 +134,8 @@ const DayView: React.FC<DayViewProps> = (props) => {
                 onEdit={onSetEditingId} 
                 onDelete={onDeleteItem}
                 onFocus={setFocusItem}
+                isCompleted={completionLog[currentDateString]?.includes(item.id) || false}
+                onToggle={() => onToggleScheduleItem(item.id, currentDateString)}
               />
             )}
           </div>

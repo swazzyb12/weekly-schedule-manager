@@ -2,6 +2,8 @@ import React, { useState, useRef } from 'react';
 import { Menu, Calendar, Download, CalendarPlus, ChevronLeft, ChevronRight, Moon, Sun, BarChart2, Upload, Activity, BookOpen } from './icons';
 import { useLocalization, useTheme } from '../App';
 import { triggerHaptic } from '../utils/native';
+import LevelProgress from './LevelProgress';
+import { UserStats } from '../types';
 
 interface HeaderProps {
   onSetView: (view: 'day' | 'week') => void;
@@ -15,6 +17,7 @@ interface HeaderProps {
   onRestoreData?: (jsonString: string) => void;
   onOpenHabitTracker?: () => void;
   onOpenMoodTracker?: () => void;
+  userStats?: UserStats;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
@@ -28,7 +31,8 @@ const Header: React.FC<HeaderProps> = ({
   onBackupData,
   onRestoreData,
   onOpenHabitTracker,
-  onOpenMoodTracker
+  onOpenMoodTracker,
+  userStats
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const { language, setLanguage, t } = useLocalization();
@@ -207,6 +211,15 @@ const Header: React.FC<HeaderProps> = ({
             </button>
           </div>
         )}
+        {userStats && (
+              <div className="hidden sm:block mr-2">
+                <LevelProgress 
+                  level={userStats.level} 
+                  xp={userStats.xp} 
+                  nextLevelXp={userStats.level * 100} 
+                />
+              </div>
+            )}
       </div>
       <input
         type="file"

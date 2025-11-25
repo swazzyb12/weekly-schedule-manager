@@ -7,7 +7,7 @@ import Modal from './components/Modal';
 import HabitTracker from './components/HabitTracker';
 import MoodTracker from './components/MoodTracker';
 import { parseTimeRange, doesOverlap, getWeekNumber, getStartDateOfWeek } from './utils/time';
-import { requestNotificationPermissions, scheduleNotificationsForWeek } from './utils/native';
+import { requestNotificationPermissions, scheduleNotificationsForWeek, triggerHaptic } from './utils/native';
 
 // --- Localization System ---
 // To avoid creating new files as per the project constraints, the localization
@@ -358,8 +358,10 @@ const AppContent: React.FC = () => {
       let newDayLogs;
       if (isCompleted) {
         newDayLogs = currentDayLogs.filter(hId => hId !== id);
+        addXP(-5);
       } else {
         newDayLogs = [...currentDayLogs, id];
+        addXP(5);
       }
 
       return {
@@ -658,17 +660,12 @@ const AppContent: React.FC = () => {
   const closeErrorModal = () => setErrorModal({ isOpen: false, title: '', message: '' });
   const closeConfirmModal = () => setConfirmModal({ isOpen: false, title: '', message: '' });
 
-  const handleSaveJournalEntry = (entry: JournalEntry) => {
-    setJournalLogs(prev => ({
-      ...prev,
-      [entry.date]: entry
-    }));
-    setMoodTrackerDate(null);
-  };
+  const [showHabitTracker, setShowHabitTracker] = useState(false);
+  const [moodTrackerDate, setMoodTrackerDate] = useState<string | null>(null);
 
   const addXP = (amount: number) => {
     setUserStats(prev => {
-      const newXP = Math.max(0, prev.xp + amount); // Prevent negative XP
+      const newXP = Math.max(0, prev.xp + amount);
       const nextLevelXP = prev.level * 100;
       let newLevel = prev.level;
       
@@ -682,7 +679,6 @@ const AppContent: React.FC = () => {
         });
       }
 
-      // Update streak logic
       const today = new Date().toISOString().split('T')[0];
       let newStreak = prev.streak;
       if (today !== prev.lastActiveDate) {
@@ -728,6 +724,14 @@ const AppContent: React.FC = () => {
       });
   };
 
+  const handleSaveJournalEntry = (entry: JournalEntry) => {
+    setJournalLogs(prev => ({
+      ...prev,
+      [entry.date]: entry
+    }));
+    setMoodTrackerDate(null);
+  };
+
   return (
     <>
       {view === 'week' ? (
@@ -767,6 +771,9 @@ const AppContent: React.FC = () => {
           onOpenMoodTracker={setMoodTrackerDate}
           habits={habits}
           habitLogs={habitLogs}
+          userStats={userStats}
+          completionLog={completionLog}
+          onToggleScheduleItem={handleToggleScheduleItem}
         />
       )}
       
