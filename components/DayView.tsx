@@ -9,6 +9,8 @@ import Analytics from './Analytics';
 import { Plus } from './icons';
 import { useLocalization } from '../App';
 import { triggerHaptic } from '../utils/native';
+import { getStartDateOfWeek } from '../utils/time';
+import { DAYS } from '../constants';
 
 interface DayViewProps {
   schedule: Schedule;
@@ -33,6 +35,7 @@ interface DayViewProps {
   onBackupData: () => void;
   onRestoreData: (jsonString: string) => void;
   onOpenHabitTracker: () => void;
+  onOpenMoodTracker: (date: string) => void;
   habits: Habit[];
   habitLogs: HabitLog;
 }
@@ -61,6 +64,7 @@ const DayView: React.FC<DayViewProps> = (props) => {
     onBackupData,
     onRestoreData,
     onOpenHabitTracker,
+    onOpenMoodTracker,
     habits,
     habitLogs,
   } = props;
@@ -78,6 +82,16 @@ const DayView: React.FC<DayViewProps> = (props) => {
       notes: "",
   };
 
+  const handleOpenMoodTracker = () => {
+    const year = new Date().getFullYear();
+    const startDate = getStartDateOfWeek(selectedWeek, year);
+    const dayIndex = DAYS.indexOf(selectedDay);
+    const date = new Date(startDate);
+    date.setDate(startDate.getDate() + dayIndex);
+    const dateString = date.toISOString().split('T')[0];
+    onOpenMoodTracker(dateString);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 pb-24 transition-colors duration-200">
       <Header 
@@ -91,6 +105,7 @@ const DayView: React.FC<DayViewProps> = (props) => {
         onBackupData={onBackupData}
         onRestoreData={onRestoreData}
         onOpenHabitTracker={onOpenHabitTracker}
+        onOpenMoodTracker={handleOpenMoodTracker}
       />
       <DayTabs selectedDay={selectedDay} onSetSelectedDay={onSetSelectedDay} />
       

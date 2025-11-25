@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Menu, Calendar, Download, CalendarPlus, ChevronLeft, ChevronRight, Moon, Sun, BarChart2, Upload, Activity } from './icons';
+import { Menu, Calendar, Download, CalendarPlus, ChevronLeft, ChevronRight, Moon, Sun, BarChart2, Upload, Activity, BookOpen } from './icons';
 import { useLocalization, useTheme } from '../App';
 import { triggerHaptic } from '../utils/native';
 
@@ -14,6 +14,7 @@ interface HeaderProps {
   onBackupData?: () => void;
   onRestoreData?: (jsonString: string) => void;
   onOpenHabitTracker?: () => void;
+  onOpenMoodTracker?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
@@ -26,7 +27,8 @@ const Header: React.FC<HeaderProps> = ({
   onShowAnalytics,
   onBackupData,
   onRestoreData,
-  onOpenHabitTracker
+  onOpenHabitTracker,
+  onOpenMoodTracker
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const { language, setLanguage, t } = useLocalization();
@@ -145,6 +147,16 @@ const Header: React.FC<HeaderProps> = ({
               >
                 <Activity className="w-4 h-4" />
                 {t('habitTracker')}
+              </button>
+            )}
+
+            {onOpenMoodTracker && (
+              <button
+                onClick={() => { triggerHaptic('medium'); onOpenMoodTracker(); setShowMenu(false); }}
+                className="w-full px-4 py-2 flex items-center justify-center gap-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                <BookOpen className="w-4 h-4" />
+                {t('dailyJournal')}
               </button>
             )}
 

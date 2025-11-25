@@ -1,10 +1,11 @@
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
-import type { Schedule, Day, ScheduleItem, Habit, HabitLog } from './types';
+import type { Schedule, Day, ScheduleItem, Habit, HabitLog, JournalLog, JournalEntry, UserStats, CompletionLog } from './types';
 import { getInitialSchedule, DAYS, TEMPLATES } from './constants';
 import DayView from './components/DayView';
 import WeekView from './components/WeekView';
 import Modal from './components/Modal';
 import HabitTracker from './components/HabitTracker';
+import MoodTracker from './components/MoodTracker';
 import { parseTimeRange, doesOverlap, getWeekNumber, getStartDateOfWeek } from './utils/time';
 import { requestNotificationPermissions, scheduleNotificationsForWeek } from './utils/native';
 
@@ -82,7 +83,22 @@ const translations: Record<string, Record<string, string>> = {
     addHabit: "Add Habit",
     add: "Add",
     habitPerformance: "Habit Performance",
-    timeDistribution: "Time Distribution"
+    timeDistribution: "Time Distribution",
+    dailyJournal: "Daily Journal",
+    howAreYouFeeling: "How are you feeling today?",
+    saveEntry: "Save Entry",
+    entrySaved: "Journal entry saved!",
+    "mood.great": "Great",
+    "mood.good": "Good",
+    "mood.neutral": "Neutral",
+    "mood.bad": "Bad",
+    "mood.awful": "Awful",
+    journalNote: "Journal Note",
+    journalPlaceholder: "Write about your day...",
+    xp: "XP",
+    levelUp: "Level Up!",
+    levelUpMessage: "Congratulations! You've reached level {level}!",
+    streak: "Streak"
   },
   nl: {
     appName: "Mijn Schema",
@@ -153,7 +169,22 @@ const translations: Record<string, Record<string, string>> = {
     addHabit: "Gewoonte Toevoegen",
     add: "Toevoegen",
     habitPerformance: "Gewoonte Prestaties",
-    timeDistribution: "Tijdsverdeling"
+    timeDistribution: "Tijdsverdeling",
+    dailyJournal: "Dagboek",
+    howAreYouFeeling: "Hoe voel je je vandaag?",
+    saveEntry: "Opslaan",
+    entrySaved: "Dagboek item opgeslagen!",
+    "mood.great": "Geweldig",
+    "mood.good": "Goed",
+    "mood.neutral": "Neutraal",
+    "mood.bad": "Slecht",
+    "mood.awful": "Verschrikkelijk",
+    journalNote: "Dagboek Notitie",
+    journalPlaceholder: "Schrijf over je dag...",
+    xp: "XP",
+    levelUp: "Niveau Omhoog!",
+    levelUpMessage: "Gefeliciteerd! Je hebt niveau {level} bereikt!",
+    streak: "Reeks"
   },
 };
 
@@ -263,7 +294,29 @@ const AppContent: React.FC = () => {
     return {};
   });
 
-  const [showHabitTracker, setShowHabitTracker] = useState(false);
+  const [journalLogs, setJournalLogs] = useState<JournalLog>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('journalLogs');
+      if (saved) return JSON.parse(saved);
+    }
+    return {};
+  });
+
+  const [userStats, setUserStats] = useState<UserStats>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('userStats');
+      if (saved) return JSON.parse(saved);
+    }
+    return { xp: 0, level: 1, streak: 0, lastActiveDate: new Date().toISOString().split('T')[0] };
+  });
+
+  const [completionLog, setCompletionLog] = useState<CompletionLog>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('completionLog');
+      if (saved) return JSON.parse(saved);
+    }
+    return {};
+  });
 
   useEffect(() => {
     localStorage.setItem('templates', JSON.stringify(templates));
@@ -276,6 +329,18 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('habitLogs', JSON.stringify(habitLogs));
   }, [habitLogs]);
+
+  useEffect(() => {
+    localStorage.setItem('journalLogs', JSON.stringify(journalLogs));
+  }, [journalLogs]);
+
+  useEffect(() => {
+    localStorage.setItem('userStats', JSON.stringify(userStats));
+  }, [userStats]);
+
+  useEffect(() => {
+    localStorage.setItem('completionLog', JSON.stringify(completionLog));
+  }, [completionLog]);
 
   const handleAddHabit = (habit: Habit) => {
     setHabits(prev => [...prev, habit]);
@@ -337,8 +402,8 @@ const AppContent: React.FC = () => {
           }),
         });
         return;
-      }
     }
+  }
 
     setSchedule(prevSchedule => ({
       ...prevSchedule,
@@ -593,6 +658,76 @@ const AppContent: React.FC = () => {
   const closeErrorModal = () => setErrorModal({ isOpen: false, title: '', message: '' });
   const closeConfirmModal = () => setConfirmModal({ isOpen: false, title: '', message: '' });
 
+  const handleSaveJournalEntry = (entry: JournalEntry) => {
+    setJournalLogs(prev => ({
+      ...prev,
+      [entry.date]: entry
+    }));
+    setMoodTrackerDate(null);
+  };
+
+  const addXP = (amount: number) => {
+    setUserStats(prev => {
+      const newXP = Math.max(0, prev.xp + amount); // Prevent negative XP
+      const nextLevelXP = prev.level * 100;
+      let newLevel = prev.level;
+      
+      if (newXP >= nextLevelXP) {
+        newLevel += 1;
+        triggerHaptic('success');
+        setErrorModal({
+            isOpen: true,
+            title: t('levelUp'),
+            message: t('levelUpMessage', { level: newLevel })
+        });
+      }
+
+      // Update streak logic
+      const today = new Date().toISOString().split('T')[0];
+      let newStreak = prev.streak;
+      if (today !== prev.lastActiveDate) {
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          const yesterdayStr = yesterday.toISOString().split('T')[0];
+          
+          if (prev.lastActiveDate === yesterdayStr) {
+              newStreak += 1;
+          } else if (prev.lastActiveDate !== today) {
+              newStreak = 1; 
+          }
+      }
+
+      return {
+        ...prev,
+        xp: newXP,
+        level: newLevel,
+        streak: newStreak,
+        lastActiveDate: today
+      };
+    });
+  };
+
+  const handleToggleScheduleItem = (id: string, date: string) => {
+      setCompletionLog(prev => {
+          const currentDayLogs = prev[date] || [];
+          const isCompleted = currentDayLogs.includes(id);
+          
+          let newDayLogs;
+          if (isCompleted) {
+              newDayLogs = currentDayLogs.filter(itemId => itemId !== id);
+              addXP(-10); 
+          } else {
+              newDayLogs = [...currentDayLogs, id];
+              addXP(10); 
+          }
+          
+          return {
+              ...prev,
+              [date]: newDayLogs
+          };
+      });
+  };
+
   return (
     <>
       {view === 'week' ? (
@@ -629,6 +764,7 @@ const AppContent: React.FC = () => {
           onBackupData={handleBackupData}
           onRestoreData={handleRestoreData}
           onOpenHabitTracker={() => setShowHabitTracker(true)}
+          onOpenMoodTracker={setMoodTrackerDate}
           habits={habits}
           habitLogs={habitLogs}
         />
@@ -642,6 +778,14 @@ const AppContent: React.FC = () => {
           onDeleteHabit={handleDeleteHabit}
           onToggleHabit={handleToggleHabit}
           onClose={() => setShowHabitTracker(false)}
+        />
+      )}
+      {moodTrackerDate && (
+        <MoodTracker
+          date={moodTrackerDate}
+          entry={journalLogs[moodTrackerDate]}
+          onSave={handleSaveJournalEntry}
+          onClose={() => setMoodTrackerDate(null)}
         />
       )}
 
