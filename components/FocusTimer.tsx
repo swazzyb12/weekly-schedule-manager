@@ -82,9 +82,9 @@ const FocusTimer: React.FC<FocusTimerProps> = ({ duration, activity, onClose }) 
 
       <div className="text-center space-y-8 w-full max-w-md">
         <h2 className="text-2xl font-medium text-white/90">{t('focusMode')}</h2>
-        <h1 className="text-3xl font-bold text-white truncate px-4">{activity}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white truncate px-4">{activity}</h1>
         
-        <div className="relative w-64 h-64 mx-auto flex items-center justify-center">
+        <div className="relative w-full max-w-[256px] aspect-square mx-auto flex items-center justify-center">
           {/* Circular Progress */}
           <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
             <circle

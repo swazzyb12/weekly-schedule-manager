@@ -101,21 +101,23 @@ const DayView: React.FC<DayViewProps> = (props) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 pb-24 transition-colors duration-200">
-      <Header 
-        onSetView={onSetView} 
-        onResetToDefault={onResetToDefault} 
-        onExportToCSV={onExportToCSV}
-        onExportToICS={onExportToICS} 
-        selectedWeek={selectedWeek}
-        onSetSelectedWeek={onSetSelectedWeek}
-        onShowAnalytics={() => setShowAnalytics(true)}
-        onBackupData={onBackupData}
-        onRestoreData={onRestoreData}
-        onOpenHabitTracker={onOpenHabitTracker}
-        onOpenMoodTracker={handleOpenMoodTracker}
-        userStats={userStats}
-      />
-      <DayTabs selectedDay={selectedDay} onSetSelectedDay={onSetSelectedDay} />
+      <div className="sticky top-0 z-20 bg-white dark:bg-gray-800 shadow-md">
+        <Header 
+          onSetView={onSetView} 
+          onResetToDefault={onResetToDefault} 
+          onExportToCSV={onExportToCSV}
+          onExportToICS={onExportToICS} 
+          selectedWeek={selectedWeek}
+          onSetSelectedWeek={onSetSelectedWeek}
+          onShowAnalytics={() => setShowAnalytics(true)}
+          onBackupData={onBackupData}
+          onRestoreData={onRestoreData}
+          onOpenHabitTracker={onOpenHabitTracker}
+          onOpenMoodTracker={handleOpenMoodTracker}
+          userStats={userStats}
+        />
+        <DayTabs selectedDay={selectedDay} onSetSelectedDay={onSetSelectedDay} />
+      </div>
       
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-3">
         {schedule[selectedDay].map((item) => (

@@ -37,7 +37,7 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({ date, entry, onSave, onClose 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh] mx-auto">
         
         {/* Header */}
         <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-700">
@@ -66,7 +66,7 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({ date, entry, onSave, onClose 
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 text-center">
               {t('howAreYouFeeling')}
             </label>
-            <div className="flex justify-between gap-2">
+            <div className="grid grid-cols-5 gap-1 sm:gap-2">
               {moods.map((m) => (
                 <button
                   key={m.value}
@@ -75,14 +75,16 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({ date, entry, onSave, onClose 
                     triggerHaptic('light');
                     setMood(m.value);
                   }}
-                  className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-200 ${
+                  className={`flex flex-col items-center gap-1 p-1 sm:p-2 rounded-xl transition-all duration-200 ${
                     mood === m.value 
-                      ? `${m.color} ring-2 ring-offset-2 ring-purple-500 scale-110` 
+                      ? `${m.color} ring-2 ring-offset-2 ring-purple-500 scale-105 sm:scale-110` 
                       : 'text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
-                  {m.icon}
-                  <span className="text-xs font-medium">{m.label}</span>
+                  <div className="transform scale-75 sm:scale-100">
+                    {m.icon}
+                  </div>
+                  <span className="text-[10px] sm:text-xs font-medium truncate w-full text-center">{m.label}</span>
                 </button>
               ))}
             </div>

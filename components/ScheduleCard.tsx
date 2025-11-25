@@ -72,18 +72,18 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({ item, onEdit, onDelete, onF
               <h3 className={`font-bold text-lg ${style.text} dark:text-white truncate`}>{item.activity}</h3>
               <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-sm text-gray-600 dark:text-gray-400 mt-1">
                 <div className="flex items-center gap-1.5">
-                  <Clock className="w-4 h-4" />
-                  <span>{item.time}</span>
+                  <Clock className="w-4 h-4 shrink-0" />
+                  <span className="whitespace-nowrap">{item.time}</span>
                 </div>
                 <span className="hidden sm:inline">•</span>
-                <span>{item.duration}</span>
+                <span className="whitespace-nowrap">{item.duration}</span>
                 {item.recurrence && item.recurrence !== 'none' && (
                   <>
                     <span className="hidden sm:inline">•</span>
-                    <div className="flex items-center gap-1.5 capitalize">
-                      <Repeat className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                    <div className="flex items-center gap-1.5 capitalize w-full sm:w-auto mt-1 sm:mt-0">
+                      <Repeat className="w-4 h-4 text-gray-500 dark:text-gray-400 shrink-0" />
                       <span>{t(item.recurrence)}</span>
-                      {item.recurrenceEndDate && <span>{t('repeatUntil')} {new Date(item.recurrenceEndDate + 'T00:00:00').toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' })}</span>}
+                      {item.recurrenceEndDate && <span className="truncate max-w-[100px] sm:max-w-none">{t('repeatUntil')} {new Date(item.recurrenceEndDate + 'T00:00:00').toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' })}</span>}
                     </div>
                   </>
                 )}

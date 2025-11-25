@@ -32,10 +32,11 @@ const ClockFace: React.FC<{
   const hours = Array.from({ length: 12 }, (_, i) => i + 1); // 1 to 12
 
   return (
-    <div className="relative w-64 h-64 mx-auto my-4" role="listbox" aria-label="Hour selector">
+    <div className="relative w-full max-w-[256px] aspect-square mx-auto my-4" role="listbox" aria-label="Hour selector">
       {/* Center dot */}
       <div className="absolute top-1/2 left-1/2 w-2 h-2 -translate-x-1/2 -translate-y-1/2 bg-blue-600 rounded-full" />
       
+      <div className="absolute inset-0 transform scale-[0.8] sm:scale-100 origin-center">
       {/* Outer ring (PM hours: 13-23 and 12) */}
       {hours.map((h) => {
         const hour24 = h === 12 ? 12 : h + 12; // 1 -> 13, 11 -> 23, 12 -> 12
@@ -78,6 +79,7 @@ const ClockFace: React.FC<{
           </button>
         );
       })}
+      </div>
     </div>
   );
 };

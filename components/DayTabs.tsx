@@ -13,7 +13,7 @@ interface DayTabsProps {
 const DayTabs: React.FC<DayTabsProps> = ({ selectedDay, onSetSelectedDay }) => {
   const { t } = useLocalization();
   return (
-    <div className="bg-white dark:bg-gray-800 sticky top-[88px] z-10 shadow-sm transition-colors duration-200">
+    <div className="bg-white dark:bg-gray-800 transition-colors duration-200">
       <div className="max-w-4xl mx-auto px-4">
         <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
           {DAYS.map(day => (

@@ -22,8 +22,8 @@ const WeekView: React.FC<WeekViewProps> = ({ schedule, setView, onExportToCSV, o
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-2 sm:p-4 transition-colors duration-200">
       <div className="max-w-6xl mx-auto">
         <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-4 mb-4 sticky top-2 sm:top-4 z-10 transition-colors duration-200">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 min-w-0 flex items-center gap-2 sm:gap-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex-1 min-w-0 flex flex-wrap items-center gap-2 sm:gap-4">
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
                     <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                     <span className="truncate">{t('weekOverview')}</span>
@@ -54,10 +54,10 @@ const WeekView: React.FC<WeekViewProps> = ({ schedule, setView, onExportToCSV, o
                     </button>
                 </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
                <button
                 onClick={() => { triggerHaptic('medium'); onExportToICS(); }}
-                className="px-3 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                className="px-3 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 whitespace-nowrap"
                 aria-label={t('exportToICal')}
               >
                 <CalendarPlus className="w-4 h-4" />
@@ -65,7 +65,7 @@ const WeekView: React.FC<WeekViewProps> = ({ schedule, setView, onExportToCSV, o
               </button>
               <button
                 onClick={() => { triggerHaptic('medium'); onExportToCSV(); }}
-                className="px-3 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
+                className="px-3 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 whitespace-nowrap"
                 aria-label={t('exportToCSV')}
               >
                 <Download className="w-4 h-4" />
@@ -73,10 +73,10 @@ const WeekView: React.FC<WeekViewProps> = ({ schedule, setView, onExportToCSV, o
               </button>
               <button
                 onClick={() => { triggerHaptic('medium'); setView('day'); }}
-                className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 whitespace-nowrap"
               >
                 <Home className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('dayView')}</span>
+                <span className="inline">{t('dayView')}</span>
               </button>
             </div>
           </div>

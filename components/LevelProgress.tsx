@@ -13,22 +13,22 @@ const LevelProgress: React.FC<LevelProgressProps> = ({ level, xp, nextLevelXp })
   const progress = Math.min(100, (xp / nextLevelXp) * 100);
 
   return (
-    <div className="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-xl p-2 shadow-sm border border-gray-100 dark:border-gray-700">
-      <div className="relative">
-        <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center text-yellow-600 dark:text-yellow-400 font-bold text-lg">
+    <div className="flex items-center gap-2 sm:gap-3 bg-white dark:bg-gray-800 rounded-xl p-1.5 sm:p-2 shadow-sm border border-gray-100 dark:border-gray-700 w-full">
+      <div className="relative shrink-0">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center text-yellow-600 dark:text-yellow-400 font-bold text-base sm:text-lg">
           {level}
         </div>
-        <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white dark:border-gray-800">
+        <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white text-[8px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded-full border-2 border-white dark:border-gray-800">
           Lvl
         </div>
       </div>
       
-      <div className="flex-1 min-w-[100px]">
+      <div className="flex-1 min-w-0">
         <div className="flex justify-between text-xs mb-1">
-          <span className="font-semibold text-gray-700 dark:text-gray-300">{t('xp')}</span>
-          <span className="text-gray-500 dark:text-gray-400">{xp} / {nextLevelXp}</span>
+          <span className="font-semibold text-gray-700 dark:text-gray-300 truncate mr-2">{t('xp')}</span>
+          <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap">{xp} / {nextLevelXp}</span>
         </div>
-        <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className="h-1.5 sm:h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
           <div 
             className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}

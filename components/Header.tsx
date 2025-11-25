@@ -61,10 +61,10 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-20 transition-colors duration-200">
+    <div className="bg-white dark:bg-gray-800 transition-colors duration-200">
       <div className="max-w-4xl mx-auto px-4 py-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex-1 min-w-0 flex items-center gap-2 sm:gap-4">
+        <div className="flex flex-wrap items-center justify-between mb-3 gap-y-3">
+          <div className="flex-1 min-w-0 flex flex-wrap items-center gap-2 sm:gap-4 mr-2">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
               <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               <span className="truncate">{t('appName')}</span>
@@ -212,14 +212,14 @@ const Header: React.FC<HeaderProps> = ({
           </div>
         )}
         {userStats && (
-              <div className="hidden sm:block mr-2">
-                <LevelProgress 
-                  level={userStats.level} 
-                  xp={userStats.xp} 
-                  nextLevelXp={userStats.level * 100} 
-                />
-              </div>
-            )}
+          <div className="mt-3">
+            <LevelProgress 
+              level={userStats.level} 
+              xp={userStats.xp} 
+              nextLevelXp={userStats.level * 100} 
+            />
+          </div>
+        )}
       </div>
       <input
         type="file"
