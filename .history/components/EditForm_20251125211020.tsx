@@ -4,7 +4,6 @@ import { CATEGORY_STYLES } from '../constants';
 import { Save, X, Clock } from './icons';
 import { useLocalization } from '../App';
 import { parseTimeRange, formatDuration } from '../utils/time';
-import QuickTemplates from './QuickTemplates';
 
 // --- TimeRangePicker Component (inlined for project constraints) ---
 

@@ -4,7 +4,6 @@ import { CATEGORY_STYLES } from '../constants';
 import { Save, X, Clock } from './icons';
 import { useLocalization } from '../App';
 import { parseTimeRange, formatDuration } from '../utils/time';
-import QuickTemplates from './QuickTemplates';
 
 // --- TimeRangePicker Component (inlined for project constraints) ---
 
@@ -192,23 +191,23 @@ const TimeRangePicker: React.FC<TimeRangePickerProps> = ({ isOpen, initialValue,
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={onClose} aria-modal="true" role="dialog">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm p-6 transform transition-all animate-fade-in-down" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 transform transition-all animate-fade-in-down" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-around items-center mb-4">
           <div className="text-center">
-            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Start Time</p>
+            <p className="text-sm font-semibold text-gray-500 mb-1">Start Time</p>
             <button
               onClick={() => { setActiveSelector('start'); setSelectionStage('hour'); }}
-              className={`text-4xl font-bold p-2 rounded-lg transition-colors w-40 ${activeSelector === 'start' ? 'text-blue-600 bg-blue-50 dark:bg-blue-900 dark:text-blue-300' : 'text-gray-700 dark:text-gray-200'}`}
+              className={`text-4xl font-bold p-2 rounded-lg transition-colors w-40 ${activeSelector === 'start' ? 'text-blue-600 bg-blue-50' : 'text-gray-700'}`}
               aria-label={`Selected start time: ${formatTimeToStr(startTime)}. Click to edit.`}
             >
               {formatTimeToStr(startTime)}
             </button>
           </div>
           <div className="text-center">
-            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">End Time</p>
+            <p className="text-sm font-semibold text-gray-500 mb-1">End Time</p>
             <button
               onClick={() => { setActiveSelector('end'); setSelectionStage('hour'); }}
-              className={`text-4xl font-bold p-2 rounded-lg transition-colors w-40 ${activeSelector === 'end' ? 'text-blue-600 bg-blue-50 dark:bg-blue-900 dark:text-blue-300' : 'text-gray-700 dark:text-gray-200'}`}
+              className={`text-4xl font-bold p-2 rounded-lg transition-colors w-40 ${activeSelector === 'end' ? 'text-blue-600 bg-blue-50' : 'text-gray-700'}`}
               aria-label={`Selected end time: ${formatTimeToStr(endTime)}. Click to edit.`}
             >
               {formatTimeToStr(endTime)}
@@ -228,7 +227,7 @@ const TimeRangePicker: React.FC<TimeRangePickerProps> = ({ isOpen, initialValue,
                     key={m}
                     type="button"
                     onClick={() => handleSelectMinute(m)}
-                    className={`w-24 h-16 flex items-center justify-center text-xl font-semibold rounded-lg transition-colors ${isSelected ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-blue-100 dark:hover:bg-blue-900 hover:text-blue-600 dark:hover:text-blue-300'}`}
+                    className={`w-24 h-16 flex items-center justify-center text-xl font-semibold rounded-lg transition-colors ${isSelected ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-blue-100 hover:text-blue-600'}`}
                     aria-label={`Select ${m} minutes.`}
                   >
                     :{String(m).padStart(2, '0')}
@@ -240,7 +239,7 @@ const TimeRangePicker: React.FC<TimeRangePickerProps> = ({ isOpen, initialValue,
         )}
 
         <div className="flex gap-3 mt-4">
-          <button onClick={onClose} className="flex-1 px-4 py-2.5 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors">
+          <button onClick={onClose} className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-colors">
             {t('cancel')}
           </button>
           <button onClick={handleSave} className="flex-1 px-4 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
@@ -304,13 +303,13 @@ const EditForm: React.FC<EditFormProps> = ({ item, onSave, onCancel }) => {
   
   return (
     <>
-      <form onSubmit={handleSave} className="p-4 bg-gray-50 dark:bg-gray-700 space-y-3 transition-colors duration-200">
+      <form onSubmit={handleSave} className="p-4 bg-gray-50 space-y-3">
         <input
           type="text"
           name="activity"
           value={editForm.activity}
           onChange={handleInputChange}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           placeholder={t('activity')}
           required
         />
@@ -318,10 +317,10 @@ const EditForm: React.FC<EditFormProps> = ({ item, onSave, onCancel }) => {
           <button
             type="button"
             onClick={() => setIsTimePickerOpen(true)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-left flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-left flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <Clock className="w-5 h-5 text-gray-400 dark:text-gray-500" />
-            <span className={editForm.time ? 'text-gray-800 dark:text-white' : 'text-gray-400 dark:text-gray-500'}>
+            <Clock className="w-5 h-5 text-gray-400" />
+            <span className={editForm.time ? 'text-gray-800' : 'text-gray-400'}>
               {editForm.time || t('timePlaceholder')}
             </span>
           </button>
@@ -330,7 +329,7 @@ const EditForm: React.FC<EditFormProps> = ({ item, onSave, onCancel }) => {
             name="duration"
             value={editForm.duration}
             readOnly
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500"
             placeholder={t('durationPlaceholder')}
           />
         </div>
@@ -338,7 +337,7 @@ const EditForm: React.FC<EditFormProps> = ({ item, onSave, onCancel }) => {
           name="category"
           value={editForm.category}
           onChange={handleInputChange}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
           {Object.keys(CATEGORY_STYLES).map(cat => (
             <option key={cat} value={cat}>{t(`categories.${cat}`)}</option>
@@ -349,7 +348,7 @@ const EditForm: React.FC<EditFormProps> = ({ item, onSave, onCancel }) => {
             name="recurrence"
             value={editForm.recurrence || 'none'}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="none">{t('doesNotRepeat')}</option>
             <option value="daily">{t('daily')}</option>
@@ -358,14 +357,14 @@ const EditForm: React.FC<EditFormProps> = ({ item, onSave, onCancel }) => {
           </select>
           {editForm.recurrence && editForm.recurrence !== 'none' && (
             <div className="relative pt-2">
-              <label htmlFor="recurrenceEndDate" className="absolute -top-0.5 left-2 -mt-px inline-block bg-gray-50 dark:bg-gray-700 px-1 text-xs font-medium text-gray-500 dark:text-gray-400">{t('repeatUntil')}</label>
+              <label htmlFor="recurrenceEndDate" className="absolute -top-0.5 left-2 -mt-px inline-block bg-gray-50 px-1 text-xs font-medium text-gray-500">{t('repeatUntil')}</label>
               <input
                 id="recurrenceEndDate"
                 type="date"
                 name="recurrenceEndDate"
                 value={editForm.recurrenceEndDate || ''}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           )}
@@ -374,7 +373,7 @@ const EditForm: React.FC<EditFormProps> = ({ item, onSave, onCancel }) => {
           name="notes"
           value={editForm.notes}
           onChange={handleInputChange}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           placeholder={t('notes')}
           rows={2}
         />

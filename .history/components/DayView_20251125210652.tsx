@@ -61,7 +61,7 @@ const DayView: React.FC<DayViewProps> = (props) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 pb-24 transition-colors duration-200">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pb-24">
       <Header 
         onSetView={onSetView} 
         onResetToDefault={onResetToDefault} 
@@ -74,7 +74,7 @@ const DayView: React.FC<DayViewProps> = (props) => {
       
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-3">
         {schedule[selectedDay].map((item) => (
-          <div key={item.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
+          <div key={item.id} className="bg-white rounded-xl shadow-lg overflow-hidden transition-shadow duration-300 hover:shadow-xl">
             {editingId === item.id ? (
               <EditForm 
                 item={item} 
@@ -92,7 +92,7 @@ const DayView: React.FC<DayViewProps> = (props) => {
         ))}
 
         {isAdding && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden animate-fade-in-down">
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden animate-fade-in-down">
             <EditForm 
               item={NEW_ITEM_TEMPLATE}
               onSave={onSaveNewItem} 
@@ -102,8 +102,8 @@ const DayView: React.FC<DayViewProps> = (props) => {
         )}
         
         {schedule[selectedDay].length === 0 && !isAdding && (
-          <div className="text-center py-10 px-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
-            <p className="text-gray-500 dark:text-gray-400">{t('noActivities')}</p>
+          <div className="text-center py-10 px-4 bg-white rounded-xl shadow-lg">
+            <p className="text-gray-500">{t('noActivities')}</p>
           </div>
         )}
       </main>
@@ -111,8 +111,8 @@ const DayView: React.FC<DayViewProps> = (props) => {
       {!isAdding && (
         <div className="fixed bottom-6 right-6 z-30">
           <button
-            onClick={() => { triggerHaptic('light'); onAddNewItem(); }}
-            className="bg-blue-600 text-white rounded-full p-4 shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-900 transition-transform transform hover:scale-110"
+            onClick={onAddNewItem}
+            className="bg-blue-600 text-white rounded-full p-4 shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-110"
             aria-label={t('addNewItem')}
           >
             <Plus className="w-6 h-6" />

@@ -103,6 +103,57 @@ const translations: Record<string, Record<string, string>> = {
     "days.tuesday": "Dinsdag",
     "days.wednesday": "Woensdag",
     "days.thursday": "Donderdag",
+    "days.friday": "Friday",
+    "days.saturday": "Saturday",
+    "days.sunday": "Sunday",
+    "categories.anchor": "Anchor",
+    "categories.school": "School",
+    "categories.gym": "Gym",
+    "categories.deepwork": "Deep Work",
+    "categories.maintenance": "Maintenance",
+    "categories.recovery": "Recovery",
+    "categories.transition": "Transition",
+    "categories.personal": "Personal",
+    "categories.social": "Social",
+    "categories.church": "Church",
+    "categories.planning": "Planning"
+  },
+  nl: {
+    appName: "Mijn Schema",
+    weekOverview: "Weekoverzicht",
+    exportToICal: "Exporteer naar iCal (.ics)",
+    exportToCSV: "Exporteer naar CSV",
+    resetToDefault: "Reset naar standaard",
+    dayView: "Dagweergave",
+    home: "Dagweergave",
+    ical: "iCal",
+    csv: "CSV",
+    addNewItem: "Nieuw item toevoegen",
+    noActivities: "Geen activiteiten gepland voor vandaag.",
+    addActivity: "Voeg een activiteit toe",
+    save: "Opslaan",
+    cancel: "Annuleren",
+    edit: "Bewerken",
+    delete: "Verwijderen",
+    activity: "Activiteit",
+    timePlaceholder: "Tijd (bijv. 9:00-10:00)",
+    durationPlaceholder: "Duur (bijv. 1u)",
+    notes: "Notities",
+    doesNotRepeat: "Herhaalt niet",
+    daily: "Dagelijks",
+    weekly: "Wekelijks",
+    monthly: "Maandelijks",
+    repeatUntil: "tot",
+    schedulingConflictTitle: "Planningsconflict",
+    schedulingConflictMessage: "Het tijdslot {time} overlapt met een bestaande activiteit: \"{activity}\" ({conflictTime}). Kies een andere tijd.",
+    confirmDeletionTitle: "Verwijdering bevestigen",
+    confirmDeletionMessage: "Weet je zeker dat je \"{activity}\" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+    resetConfirm: "Weet je zeker dat je wilt resetten naar het standaardschema? Dit kan niet ongedaan worden gemaakt.",
+    ok: "OK",
+    "days.monday": "Maandag",
+    "days.tuesday": "Dinsdag",
+    "days.wednesday": "Woensdag",
+    "days.thursday": "Donderdag",
     "days.friday": "Vrijdag",
     "days.saturday": "Zaterdag",
     "days.sunday": "Zondag",
@@ -138,28 +189,10 @@ export const useLocalization = () => {
   return context;
 };
 
-// --- Theme System ---
-
-interface ThemeContextType {
-  isDarkMode: boolean;
-  toggleDarkMode: () => void;
-}
-
-const ThemeContext = createContext<ThemeContextType | null>(null);
-
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
-};
-
 // --- App Component ---
 
 const AppContent: React.FC = () => {
   const { t, language, locale } = useLocalization();
-  const { isDarkMode, toggleDarkMode } = useTheme();
   
   const [schedule, setSchedule] = useState<Schedule>(() => {
     try {
@@ -170,22 +203,6 @@ const AppContent: React.FC = () => {
     }
     return getInitialSchedule(language);
   });
-
-  useEffect(() => {
-    // Request notification permissions on mount
-    requestNotificationPermissions();
-  }, []);
-
-  useEffect(() => {
-    // Save schedule to local storage whenever it changes
-    try {
-      localStorage.setItem('weekly-schedule', JSON.stringify(schedule));
-      // Schedule notifications whenever schedule changes
-      scheduleNotificationsForWeek(schedule);
-    } catch (error) {
-      console.error('Failed to save schedule to localStorage:', error);
-    }
-  }, [schedule]);
 
   const [selectedDay, setSelectedDay] = useState<Day>('monday');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -199,6 +216,15 @@ const AppContent: React.FC = () => {
     message: string;
     onConfirm?: () => void;
   }>({ isOpen: false, title: '', message: '' });
+
+  useEffect(() => {
+    // Save schedule to local storage whenever it changes
+    try {
+      localStorage.setItem('weekly-schedule', JSON.stringify(schedule));
+    } catch (error) {
+      console.error('Failed to save schedule to localStorage:', error);
+    }
+  }, [schedule]);
 
   const handleSetEditingId = (id: string | null) => {
     setEditingId(id);
@@ -482,28 +508,6 @@ const App: React.FC = () => {
     return browserLang === 'nl' ? 'nl' : 'en';
   });
 
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('darkMode');
-      if (saved !== null) {
-        return JSON.parse(saved);
-      }
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-    return false;
-  });
-
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
-  }, [isDarkMode]);
-
-  const toggleDarkMode = () => setIsDarkMode((prev: boolean) => !prev);
-
   const t = useCallback((key: string, vars?: Record<string, string | number>) => {
     let translation = translations[language][key] || translations['en'][key] || key;
     if (vars) {
@@ -524,11 +528,7 @@ const App: React.FC = () => {
   
   return (
     <LocalizationContext.Provider value={localizationContextValue}>
-      <ThemeContext.Provider value={{ isDarkMode, toggleDarkMode }}>
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
-          <AppContent />
-        </div>
-      </ThemeContext.Provider>
+      <AppContent />
     </LocalizationContext.Provider>
   );
 };

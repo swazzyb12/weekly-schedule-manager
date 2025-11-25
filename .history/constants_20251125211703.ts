@@ -1,5 +1,5 @@
 // FIX: Import the 'Day' type to resolve the 'Cannot find name' error.
-import type { Schedule, Category, Day, ScheduleItem } from './types';
+import type { Schedule, Category, Day } from './types';
 
 export const DAYS: Day[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
