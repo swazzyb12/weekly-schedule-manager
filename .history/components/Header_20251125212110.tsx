@@ -97,15 +97,6 @@ const Header: React.FC<HeaderProps> = ({ onSetView, onResetToDefault, onExportTo
             >
               {t('weekOverview')}
             </button>
-            {onShowAnalytics && (
-              <button
-                onClick={() => { triggerHaptic('medium'); onShowAnalytics(); setShowMenu(false); }}
-                className="w-full px-4 py-2 flex items-center justify-center gap-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                <BarChart2 className="w-4 h-4" />
-                {t('weeklyAnalytics')}
-              </button>
-            )}
             <button
               onClick={() => { triggerHaptic('medium'); onExportToICS(); setShowMenu(false); }}
               className="w-full px-4 py-2 flex items-center justify-center gap-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"

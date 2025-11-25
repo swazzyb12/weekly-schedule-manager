@@ -109,8 +109,6 @@ const DayView: React.FC<DayViewProps> = (props) => {
               item={NEW_ITEM_TEMPLATE}
               onSave={onSaveNewItem} 
               onCancel={onCancelAddItem} 
-              templates={templates}
-              onAddTemplate={onAddTemplate}
             />
           </div>
         )}

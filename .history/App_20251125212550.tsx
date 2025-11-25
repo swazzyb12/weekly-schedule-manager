@@ -482,8 +482,6 @@ const AppContent: React.FC = () => {
           onExportToICS={handleExportToICS}
           selectedWeek={selectedWeek}
           onSetSelectedWeek={setSelectedWeek}
-          templates={templates}
-          onAddTemplate={handleAddTemplate}
         />
       )}
       <Modal

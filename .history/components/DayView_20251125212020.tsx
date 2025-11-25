@@ -28,8 +28,6 @@ interface DayViewProps {
   onExportToICS: () => void;
   selectedWeek: number;
   onSetSelectedWeek: React.Dispatch<React.SetStateAction<number>>;
-  templates: Partial<ScheduleItem>[];
-  onAddTemplate: (template: Partial<ScheduleItem>) => void;
 }
 
 const DayView: React.FC<DayViewProps> = (props) => {
@@ -51,8 +49,6 @@ const DayView: React.FC<DayViewProps> = (props) => {
     onExportToICS,
     selectedWeek,
     onSetSelectedWeek,
-    templates,
-    onAddTemplate,
   } = props;
   
   const { t } = useLocalization();
@@ -89,8 +85,6 @@ const DayView: React.FC<DayViewProps> = (props) => {
                 item={item} 
                 onSave={onSaveItem} 
                 onCancel={() => onSetEditingId(null)} 
-                templates={templates}
-                onAddTemplate={onAddTemplate}
               />
             ) : (
               <ScheduleCard 
@@ -109,8 +103,6 @@ const DayView: React.FC<DayViewProps> = (props) => {
               item={NEW_ITEM_TEMPLATE}
               onSave={onSaveNewItem} 
               onCancel={onCancelAddItem} 
-              templates={templates}
-              onAddTemplate={onAddTemplate}
             />
           </div>
         )}

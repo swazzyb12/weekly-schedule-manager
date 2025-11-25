@@ -208,24 +208,6 @@ const AppContent: React.FC = () => {
     onConfirm?: () => void;
   }>({ isOpen: false, title: '', message: '' });
 
-  const [templates, setTemplates] = useState<Partial<ScheduleItem>[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('templates');
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    }
-    return TEMPLATES;
-  });
-
-  useEffect(() => {
-    localStorage.setItem('templates', JSON.stringify(templates));
-  }, [templates]);
-
-  const handleAddTemplate = (template: Partial<ScheduleItem>) => {
-    setTemplates(prev => [...prev, template]);
-  };
-
   const handleSetEditingId = (id: string | null) => {
     setEditingId(id);
     if (id !== null) {
@@ -482,8 +464,6 @@ const AppContent: React.FC = () => {
           onExportToICS={handleExportToICS}
           selectedWeek={selectedWeek}
           onSetSelectedWeek={setSelectedWeek}
-          templates={templates}
-          onAddTemplate={handleAddTemplate}
         />
       )}
       <Modal

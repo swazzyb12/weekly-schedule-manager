@@ -1,17 +1,17 @@
 import React from 'react';
+import { TEMPLATES } from '../constants';
 import type { ScheduleItem } from '../types';
 import { CATEGORY_STYLES, CATEGORY_ICONS } from '../constants';
 import { triggerHaptic } from '../utils/native';
 
 interface QuickTemplatesProps {
   onSelectTemplate: (template: Partial<ScheduleItem>) => void;
-  templates: Partial<ScheduleItem>[];
 }
 
-const QuickTemplates: React.FC<QuickTemplatesProps> = ({ onSelectTemplate, templates }) => {
+const QuickTemplates: React.FC<QuickTemplatesProps> = ({ onSelectTemplate }) => {
   return (
     <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-      {templates.map((template, index) => {
+      {TEMPLATES.map((template, index) => {
         const style = CATEGORY_STYLES[template.category!] || CATEGORY_STYLES.personal;
         return (
           <button

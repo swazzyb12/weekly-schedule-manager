@@ -302,14 +302,6 @@ const EditForm: React.FC<EditFormProps> = ({ item, onSave, onCancel, templates, 
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    if (saveAsTemplate) {
-      onAddTemplate({
-        category: editForm.category,
-        activity: editForm.activity,
-        duration: editForm.duration,
-        notes: editForm.notes,
-      });
-    }
     onSave(editForm);
   };
 
@@ -324,7 +316,7 @@ const EditForm: React.FC<EditFormProps> = ({ item, onSave, onCancel, templates, 
   return (
     <>
       <form onSubmit={handleSave} className="p-4 bg-gray-50 dark:bg-gray-700 space-y-3 transition-colors duration-200">
-        <QuickTemplates onSelectTemplate={handleSelectTemplate} templates={templates} />
+        <QuickTemplates onSelectTemplate={handleSelectTemplate} />
         <input
           type="text"
           name="activity"
@@ -398,18 +390,6 @@ const EditForm: React.FC<EditFormProps> = ({ item, onSave, onCancel, templates, 
           placeholder={t('notes')}
           rows={2}
         />
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="saveAsTemplate"
-            checked={saveAsTemplate}
-            onChange={(e) => setSaveAsTemplate(e.target.checked)}
-            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-          />
-          <label htmlFor="saveAsTemplate" className="text-sm text-gray-700 dark:text-gray-300">
-            {t('saveAsTemplate')}
-          </label>
-        </div>
         <div className="flex gap-2">
           <button
             type="submit"

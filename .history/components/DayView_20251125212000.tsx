@@ -28,8 +28,6 @@ interface DayViewProps {
   onExportToICS: () => void;
   selectedWeek: number;
   onSetSelectedWeek: React.Dispatch<React.SetStateAction<number>>;
-  templates: Partial<ScheduleItem>[];
-  onAddTemplate: (template: Partial<ScheduleItem>) => void;
 }
 
 const DayView: React.FC<DayViewProps> = (props) => {
@@ -51,8 +49,6 @@ const DayView: React.FC<DayViewProps> = (props) => {
     onExportToICS,
     selectedWeek,
     onSetSelectedWeek,
-    templates,
-    onAddTemplate,
   } = props;
   
   const { t } = useLocalization();
@@ -89,8 +85,6 @@ const DayView: React.FC<DayViewProps> = (props) => {
                 item={item} 
                 onSave={onSaveItem} 
                 onCancel={() => onSetEditingId(null)} 
-                templates={templates}
-                onAddTemplate={onAddTemplate}
               />
             ) : (
               <ScheduleCard 
@@ -109,8 +103,6 @@ const DayView: React.FC<DayViewProps> = (props) => {
               item={NEW_ITEM_TEMPLATE}
               onSave={onSaveNewItem} 
               onCancel={onCancelAddItem} 
-              templates={templates}
-              onAddTemplate={onAddTemplate}
             />
           </div>
         )}
@@ -137,6 +129,31 @@ const DayView: React.FC<DayViewProps> = (props) => {
           schedule={schedule} 
           onClose={() => setShowAnalytics(false)} 
         />
+      )}
+    </div>
+  );
+};
+
+export default DayView;          </div>
+        )}
+        
+        {schedule[selectedDay].length === 0 && !isAdding && (
+          <div className="text-center py-10 px-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+            <p className="text-gray-500 dark:text-gray-400">{t('noActivities')}</p>
+          </div>
+        )}
+      </main>
+
+      {!isAdding && (
+        <div className="fixed bottom-6 right-6 z-30">
+          <button
+            onClick={() => { triggerHaptic('light'); onAddNewItem(); }}
+            className="bg-blue-600 text-white rounded-full p-4 shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-900 transition-transform transform hover:scale-110"
+            aria-label={t('addNewItem')}
+          >
+            <Plus className="w-6 h-6" />
+          </button>
+        </div>
       )}
     </div>
   );

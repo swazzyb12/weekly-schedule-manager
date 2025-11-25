@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import type { Schedule, Day, ScheduleItem } from './types';
-import { getInitialSchedule, DAYS, TEMPLATES } from './constants';
+import { getInitialSchedule, DAYS } from './constants';
 import DayView from './components/DayView';
 import WeekView from './components/WeekView';
 import Modal from './components/Modal';
@@ -49,7 +49,6 @@ const translations: Record<string, Record<string, string>> = {
     weeklyAnalytics: "Weekly Analytics",
     focusMode: "Focus Mode",
     noData: "No data available for this week.",
-    saveAsTemplate: "Save as Template",
     "days.monday": "Monday",
     "days.tuesday": "Tuesday",
     "days.wednesday": "Wednesday",
@@ -106,7 +105,6 @@ const translations: Record<string, Record<string, string>> = {
     weeklyAnalytics: "Wekelijkse Analyse",
     focusMode: "Focus Modus",
     noData: "Geen gegevens beschikbaar voor deze week.",
-    saveAsTemplate: "Opslaan als sjabloon",
     "days.monday": "Maandag",
     "days.tuesday": "Dinsdag",
     "days.wednesday": "Woensdag",
@@ -207,24 +205,6 @@ const AppContent: React.FC = () => {
     message: string;
     onConfirm?: () => void;
   }>({ isOpen: false, title: '', message: '' });
-
-  const [templates, setTemplates] = useState<Partial<ScheduleItem>[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('templates');
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    }
-    return TEMPLATES;
-  });
-
-  useEffect(() => {
-    localStorage.setItem('templates', JSON.stringify(templates));
-  }, [templates]);
-
-  const handleAddTemplate = (template: Partial<ScheduleItem>) => {
-    setTemplates(prev => [...prev, template]);
-  };
 
   const handleSetEditingId = (id: string | null) => {
     setEditingId(id);
@@ -482,8 +462,6 @@ const AppContent: React.FC = () => {
           onExportToICS={handleExportToICS}
           selectedWeek={selectedWeek}
           onSetSelectedWeek={setSelectedWeek}
-          templates={templates}
-          onAddTemplate={handleAddTemplate}
         />
       )}
       <Modal
