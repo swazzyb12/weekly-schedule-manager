@@ -39,11 +39,11 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, message, onConfir
         className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6 transform transition-all animate-fade-in-down"
         onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
       >
-        <div className="flex items-start">
+        <div className="sm:flex sm:items-start">
           <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 sm:mx-0 sm:h-10 sm:w-10">
             <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
           </div>
-          <div className="ml-4 text-left flex-1">
+          <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
             <h3 className="text-lg leading-6 font-bold text-gray-900 dark:text-white" id="modal-title">
               {title}
             </h3>
